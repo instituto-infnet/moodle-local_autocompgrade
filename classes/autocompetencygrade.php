@@ -12,30 +12,25 @@ namespace local_autocompetencygrade;
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once(__DIR__ . '/../../../config.php');
+require_once(__DIR__ . '/../credentials.php');
+
 class autocompetencygrade {
-	public static function gradeassigncompetencies(/*\mod\assign\submission_graded $event*/)
+	public static function gradeassigncompetencies($assign_moduleid, $student_userid, $courseid = null)
 	{
+		global $CFG;
 		global $DB;
 
-		$usr_id = 697;
-
-		//*
-		$result = $DB->get_records_sql("
-			  SELECT
+		$result = $DB->get_records_sql('
+			SELECT
 				 comp.id id_competencia,
 				 cm.course,
-				 CONCAT_WS(' ', usr.firstname, usr.lastname) nome_completo,
-				 comp.idnumber,
-				 comp.shortname,
-				 SUM(case when grl.score > 0 then 1 else 0 end) qtd_demonstradas,
-				 COUNT(grc.id) qtd_rubricas,
 				 case
 					when AVG(case when grl.score > 0 then 1 else 0 end) < 0.5 then 1
 					when AVG(case when grl.score > 0 then 1 else 0 end) < 0.75 then 2
 					when AVG(case when grl.score > 0 then 1 else 0 end) < 1 then 3
 					when AVG(case when grl.score > 0 then 1 else 0 end) = 1 then 4
-				 end conceito,
-				 from_unixtime(gin.timemodified) data_correcao
+				 end conceito
 			FROM mdl_gradingform_rubric_criteria grc
 				 JOIN mdl_grading_definitions gd
 				   ON gd.id = grc.definitionid
@@ -47,7 +42,7 @@ class autocompetencygrade {
 				   ON cm.id = c.instanceid
 				 JOIN mdl_modules m
 				   ON m.id = cm.module
-					  AND m.name = 'assign'
+					  AND m.name = "assign"
 				 JOIN mdl_assign asg
 				   ON asg.id = cm.instance
 				 join mdl_gradingform_rubric_levels grl
@@ -66,7 +61,7 @@ class autocompetencygrade {
 				   on comp_cm.cmid = cm.id
 				 join mdl_competency as comp
 				   on comp.id = comp_cm.competencyid
-					 and comp.idnumber = LEFT(TRIM(REPLACE(grc.description, '[c]', '')), LOCATE('.', TRIM(REPLACE(grc.description, '[c]', ''))) - 1)
+					 and comp.idnumber = LEFT(TRIM(REPLACE(grc.description, "[c]", "")), LOCATE(".", TRIM(REPLACE(grc.description, "[c]", ""))) - 1)
 			where cm.id = ?
 				and usr.id = ?
 				and gin.status = 1
@@ -84,30 +79,52 @@ class autocompetencygrade {
 					order by ag2.timecreated desc
 					limit 1
 				)
-			group by nome_completo, comp.id
-			order by gin.timemodified desc, nome_completo, CAST(comp.idnumber AS UNSIGNED)
-		", array(34000, $usr_id));
+			group by comp.id
+			order by CAST(comp.idnumber AS UNSIGNED)
+		', array(
+			$assign_moduleid, $student_userid
+		));
 
-		$url = "http://vestonline.infnet.edu.br/moodle-dev/webservice/rest/server.php";
+		if (sizeof($result) > 0) {
+			$params = array(
+				'wstoken' => $CFG->moodle_wstoken,
+				'wsfunction' => 'core_competency_grade_competency_in_course',
+				'courseid' => !is_null($courseid) ? $courseid : array_values($result)[0]->course,
+				'userid' => $student_userid,
+				'note' => 'Competência avaliada automaticamente com base nas rubricas.'
+			);
 
-		$params = array(
-			"wstoken" => "b4391ed8da4035c050bd09fea2696584",
-			"wsfunction" => "core_competency_grade_competency_in_course",
-			"courseid" => array_values($result)[0]->course,
-			"userid" => $usr_id,
-			"competencyid" => array_values($result)[0]->id_competencia,
-			"grade" => array_values($result)[0]->conceito
-		);
+			$mh = curl_multi_init();
 
-		$ch = curl_init($url);
-		curl_setopt($ch, CURLOPT_POST, true);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
+			foreach ($result as $row => $values) {
+				$params['competencyid'] = $values->id_competencia;
+				$params['grade'] = $values->conceito;
 
-		$output = curl_exec($ch);
+				$ch = curl_init(
+					$CFG->wwwroot .
+					'/webservice/rest/server.php'
+				);
 
-		curl_close($ch);
+				// CURLOPT_RETURNTRANSFER para não retornar o resultado, que não é tratado pela tela de avaliação de tarefa
+				curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
+				curl_setopt($ch, CURLOPT_POST, true);
+				curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
 
-		var_dump($output);
-		//*/
+				curl_multi_add_handle($mh, $ch);
+			}
+
+			do {
+				curl_multi_exec($mh, $running);
+			} while ($running > 0);
+
+			curl_multi_close($mh);
+		}
+	}
+
+	public static function gradeassigncompetencies_submissiongraded(\core\event\base  $event)
+	{
+		if ($event->eventname === '\mod_assign\event\submission_graded') {
+			autocompetencygrade::gradeassigncompetencies($event->contextinstanceid, $event->relateduserid, $event->courseid);
+		}
 	}
 }
