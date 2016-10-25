@@ -11,6 +11,6 @@ defined('MOODLE_INTERNAL') || die();
 $observers = array (
 	array (
 		'eventname' => '\mod_assign\event\submission_graded',
-		'callback'  => 'local_autocompetencygrade\autocompetencygrade::gradeassigncompetencies',
+		'callback'  => 'local_autocompetencygrade\autocompetencygrade::gradeassigncompetencies_submissiongraded',
 	)
 );
