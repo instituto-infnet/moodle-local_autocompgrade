@@ -576,7 +576,7 @@ $table = new html_table();
 $table->head = array(
 	'#',
 	get_string('pluginname', 'mod_assign'),
-	get_string('pluginname', 'report_competency')
+	get_string('competencies', 'core_competency')
 );
 $table->data = $competencias_sem_rubricas;
 
