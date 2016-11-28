@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="local/autocompgrade/db" VERSION="20161128" COMMENT="XMLDB file for Moodle local/autocompgrade"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
+>
+  <TABLES>
+    <TABLE NAME="local_autocompgrade_courses" COMMENT="Courses to be listed in the &quot;Grade assignment competencies&quot;, along with any properties that might help group them">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="course" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Course ID"/>
+        <FIELD NAME="endyear" TYPE="int" LENGTH="4" NOTNULL="true" SEQUENCE="false" COMMENT="Year when the course ends so the results can be consolidated"/>
+        <FIELD NAME="endtrimester" TYPE="int" LENGTH="1" NOTNULL="true" SEQUENCE="false" COMMENT="Trimester when the course is finished, so the results can be consolidated"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="course" UNIQUE="true" FIELDS="course"/>
+      </INDEXES>
+    </TABLE>
+  </TABLES>
+</XMLDB>
