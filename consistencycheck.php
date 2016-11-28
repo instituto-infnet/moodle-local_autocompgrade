@@ -34,6 +34,7 @@ $consulta = $DB->get_records_sql('
 		cm.id,
 		cm.course,
 		compfwk.id frameworkid,
+		CONCAT(acgc.endyear, "T", acgc.endtrimester) trimestre,
 		modalidade.name modalidade,
 		escola.name escola,
 		programa.name programa,
@@ -46,7 +47,8 @@ $consulta = $DB->get_records_sql('
 		COUNT(distinct cmcomp.id) competencias_modulo,
 		COUNT(distinct comps_fwk.id) competencias_fwk,
 		COUNT(distinct comptpl.templateid) templates
-	from mdl_course_modules cm
+	from mdl_local_autocompgrade_courses acgc
+		join mdl_course_modules cm on cm.id = acgc.assigncmid
 		join mdl_course disciplina on disciplina.id = cm.course
 		join mdl_course_categories bloco on bloco.id = disciplina.category
 		join mdl_course_categories classe on classe.id = bloco.parent
@@ -64,9 +66,6 @@ $consulta = $DB->get_records_sql('
 			and cmcomp.competencyid = comp.id
 		left join mdl_competency_templatecomp comptpl on comptpl.competencyid = comp.id
 	where m.name = "assign"
-		and cm.id in (' .
-	implode(',', $avaliacoes) .
-		')
 	group by cm.id
 	order by modalidade,
 		escola,
