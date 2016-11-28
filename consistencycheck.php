@@ -4,30 +4,30 @@
 /**
  * Consistency check for automatic competency grading.
  *
- * @package    local_autocompetencygrade
+ * @package    local_autocompgrade
  * @copyright  2016 Instituto Infnet
 */
 
 require_once(__DIR__ . '/../../config.php');
-require_once(__DIR__ . '/classes/autocompetencygrade.php');
+require_once(__DIR__ . '/classes/autocompgrade.php');
 require_once($CFG->libdir . '/adminlib.php');
 
 global $DB;
 
-$avaliacoes = local_autocompetencygrade\autocompetencygrade::$avaliacoes_3T;
+$avaliacoes = local_autocompgrade\autocompgrade::$avaliacoes_3T;
 
-$PAGE->set_url('/local/autocompetencygrade/consistencycheck.php');
+$PAGE->set_url('/local/autocompgrade/consistencycheck.php');
 $context = context_system::instance();
 $PAGE->set_context($context);
-$PAGE->set_title(get_string('consistencycheck', 'local_autocompetencygrade'));
+$PAGE->set_title(get_string('consistencycheck', 'local_autocompgrade'));
 $PAGE->set_pagelayout('admin');
 
-admin_externalpage_setup('local_autocompetencygrade_consistencycheck');
+admin_externalpage_setup('local_autocompgrade_consistencycheck');
 
 require_login();
 require_capability('moodle/competency:competencymanage', $context);
 
-echo $OUTPUT->header() . $OUTPUT->heading(get_string('consistencycheck', 'local_autocompetencygrade'));
+echo $OUTPUT->header() . $OUTPUT->heading(get_string('consistencycheck', 'local_autocompgrade'));
 
 $consulta = $DB->get_records_sql('
 	select
@@ -161,7 +161,7 @@ foreach ($consulta as $modid => $dados) {
 
 }
 
-echo html_writer::tag('h3', get_string('consistencycheck_wrongframeworkscale', 'local_autocompetencygrade'));
+echo html_writer::tag('h3', get_string('consistencycheck_wrongframeworkscale', 'local_autocompgrade'));
 
 $table = new html_table();
 $table->head = array(
@@ -174,39 +174,39 @@ $table->data = $frameworks_escala_incorreta;
 if (!empty($table->data)) {
 	echo html_writer::table($table);
 } else {
-	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompetencygrade'), array('class' => 'alert alert-success'));
+	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompgrade'), array('class' => 'alert alert-success'));
 }
 
-echo html_writer::tag('h3', get_string('consistencycheck_coursesmissingcompetencies', 'local_autocompetencygrade'));
+echo html_writer::tag('h3', get_string('consistencycheck_coursesmissingcompetencies', 'local_autocompgrade'));
 
 $table = new html_table();
 $table->head = array(
 	'#',
 	get_string('pluginname', 'mod_assign'),
-	get_string('consistencycheck_numcompetencies', 'local_autocompetencygrade')
+	get_string('consistencycheck_numcompetencies', 'local_autocompgrade')
 );
 $table->data = $cursos_faltando_competencias;
 
 if (!empty($table->data)) {
 	echo html_writer::table($table);
 } else {
-	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompetencygrade'), array('class' => 'alert alert-success'));
+	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompgrade'), array('class' => 'alert alert-success'));
 }
 
-echo html_writer::tag('h3', get_string('consistencycheck_modulesmissingcompetencies', 'local_autocompetencygrade'));
+echo html_writer::tag('h3', get_string('consistencycheck_modulesmissingcompetencies', 'local_autocompgrade'));
 
 $table = new html_table();
 $table->head = array(
 	'#',
 	get_string('pluginname', 'mod_assign'),
-	get_string('consistencycheck_numcompetencies', 'local_autocompetencygrade')
+	get_string('consistencycheck_numcompetencies', 'local_autocompgrade')
 );
 $table->data = $avaliacoes_faltando_competencias;
 
 if (!empty($table->data)) {
 	echo html_writer::table($table);
 } else {
-	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompetencygrade'), array('class' => 'alert alert-success'));
+	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompgrade'), array('class' => 'alert alert-success'));
 }
 
 $consulta = $DB->get_records_sql('
@@ -256,13 +256,13 @@ $consulta = $DB->get_records_sql('
 		avaliacao
 ');
 
-echo html_writer::tag('h3', get_string('consistencycheck_rubricswithoutcompetency', 'local_autocompetencygrade'));
+echo html_writer::tag('h3', get_string('consistencycheck_rubricswithoutcompetency', 'local_autocompgrade'));
 
 $table = new html_table();
 $table->head = array(
 	'#',
 	get_string('pluginname', 'mod_assign'),
-	get_string('consistencycheck_numrubrics', 'local_autocompetencygrade')
+	get_string('consistencycheck_numrubrics', 'local_autocompgrade')
 );
 $table->data = array();
 
@@ -288,10 +288,10 @@ foreach ($consulta as $areaid => $dados) {
 if (!empty($table->data)) {
 	echo html_writer::table($table);
 } else {
-	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompetencygrade'), array('class' => 'alert alert-success'));
+	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompgrade'), array('class' => 'alert alert-success'));
 }
 
-echo html_writer::tag('h3', get_string('consistencycheck_frameworkswithouttemplate', 'local_autocompetencygrade'));
+echo html_writer::tag('h3', get_string('consistencycheck_frameworkswithouttemplate', 'local_autocompgrade'));
 
 $table = new html_table();
 $table->head = array(
@@ -303,7 +303,7 @@ $table->data = $frameworks_sem_template;
 if (!empty($table->data)) {
 	echo html_writer::table($table);
 } else {
-	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompetencygrade'), array('class' => 'alert alert-success'));
+	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompgrade'), array('class' => 'alert alert-success'));
 }
 
 $consulta = $DB->get_records_sql('
@@ -359,14 +359,14 @@ $consulta = $DB->get_records_sql('
 		avaliacao
 ');
 
-echo html_writer::tag('h3', get_string('consistencycheck_studentswithoutplan', 'local_autocompetencygrade'));
+echo html_writer::tag('h3', get_string('consistencycheck_studentswithoutplan', 'local_autocompgrade'));
 
 $table = new html_table();
 $table->head = array(
 	'#',
 	get_string('pluginname', 'mod_assign'),
-	get_string('students', 'local_autocompetencygrade'),
-	get_string('consistencycheck_frameworkcohorts', 'local_autocompetencygrade')
+	get_string('students', 'local_autocompgrade'),
+	get_string('consistencycheck_frameworkcohorts', 'local_autocompgrade')
 );
 $table->data = array();
 foreach ($consulta as $cmid => $dados) {
@@ -429,7 +429,7 @@ foreach ($consulta as $cmid => $dados) {
 if (!empty($table->data)) {
 	echo html_writer::table($table);
 } else {
-	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompetencygrade'), array('class' => 'alert alert-success'));
+	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompgrade'), array('class' => 'alert alert-success'));
 }
 
 $consulta = $DB->get_records_sql('
@@ -570,7 +570,7 @@ foreach ($consulta as $dados) {
 	${$var_tabledata}[] = $linha;
 }
 
-echo html_writer::tag('h3', get_string('consistencycheck_competencieswithoutrubrics', 'local_autocompetencygrade'));
+echo html_writer::tag('h3', get_string('consistencycheck_competencieswithoutrubrics', 'local_autocompgrade'));
 
 $table = new html_table();
 $table->head = array(
@@ -583,24 +583,24 @@ $table->data = $competencias_sem_rubricas;
 if (!empty($table->data)) {
 	echo html_writer::table($table);
 } else {
-	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompetencygrade'), array('class' => 'alert alert-success'));
+	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompgrade'), array('class' => 'alert alert-success'));
 }
 
-echo html_writer::tag('h3', get_string('consistencycheck_competencieswithoutenoughrubrics', 'local_autocompetencygrade'));
+echo html_writer::tag('h3', get_string('consistencycheck_competencieswithoutenoughrubrics', 'local_autocompgrade'));
 
 $table = new html_table();
 $table->head = array(
 	'#',
 	get_string('pluginname', 'mod_assign'),
 	get_string('pluginname', 'report_competency'),
-	get_string('consistencycheck_numrubrics', 'local_autocompetencygrade')
+	get_string('consistencycheck_numrubrics', 'local_autocompgrade')
 );
 $table->data = $competencias_poucas_rubricas;
 
 if (!empty($table->data)) {
 	echo html_writer::table($table);
 } else {
-	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompetencygrade'), array('class' => 'alert alert-success'));
+	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompgrade'), array('class' => 'alert alert-success'));
 }
 
 echo $OUTPUT->footer();

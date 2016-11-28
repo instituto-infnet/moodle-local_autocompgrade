@@ -4,12 +4,12 @@
 /**
  * Script for automatic competency grading.
  *
- * @package    local_autocompetencygrade
+ * @package    local_autocompgrade
  * @copyright  2016 Instituto Infnet
 */
 
 require_once(__DIR__ . '/../../config.php');
-require_once(__DIR__ . '/classes/autocompetencygrade.php');
+require_once(__DIR__ . '/classes/autocompgrade.php');
 require_once(__DIR__ . '/classes/gradeassigncompetencies_form.php');
 require_once($CFG->libdir . '/adminlib.php');
 
@@ -41,29 +41,29 @@ if (isset($avaliacoes)) {
 	}
 }
 
-$url = '/local/autocompetencygrade/gradeassigncompetencies.php';
+$url = '/local/autocompgrade/gradeassigncompetencies.php';
 
 $PAGE->set_url($url, $pageparams);
 $context = context_system::instance();
 $PAGE->set_context($context);
-$PAGE->set_title(get_string('pluginname', 'local_autocompetencygrade'));
+$PAGE->set_title(get_string('pluginname', 'local_autocompgrade'));
 $PAGE->set_pagelayout('admin');
 
-admin_externalpage_setup('local_autocompetencygrade_gradeassigncompetencies');
+admin_externalpage_setup('local_autocompgrade_gradeassigncompetencies');
 
 require_login();
 require_capability('moodle/competency:competencymanage', $context);
 
-echo $OUTPUT->header() . $OUTPUT->heading(get_string('gradeassigncompetencies', 'local_autocompetencygrade'));
+echo $OUTPUT->header() . $OUTPUT->heading(get_string('gradeassigncompetencies', 'local_autocompgrade'));
 
 $pageparams['avaliacoes'] = $avaliacoes;
 
 if (isset($pageparams['avaliacoes']) && !in_array(0, $pageparams)) {
-	echo local_autocompetencygrade\autocompetencygrade::gradeassigncompetencies_printableresult($pageparams['avaliacoes'][6], $pageparams['avaliacoes'][7], $pageparams['avaliacoes'][5]);
+	echo local_autocompgrade\autocompgrade::gradeassigncompetencies_printableresult($pageparams['avaliacoes'][6], $pageparams['avaliacoes'][7], $pageparams['avaliacoes'][5]);
 }
 
 $avaliacoes = array(
-	34281,34343,35823,35893,42273,36267,33096,33054,30207,35194,35147,35094,33288,33246,37058,37100,33372,33414,30011,34992,32928,32970,30072,33012,31620,31681,32758,32800,35719,32844,29991,32886,32705,33936,32643,32078,32009,29424,33119,32351,32445,30857,30925,34000,34474,34034,37279,37328,34546,34551,34541,33330,34519,34562,34567,34556,35246,35487,35060,38755,38764,38760,38768,35016,34668,27356,35026,35021,30433,38655,34143
+	34281,27356,29424,29991,30011,30072,30207,30433,30857,30925,31620,31681,32009,32078,32351,32445,32643,32705,32758,32800,32844,32886,32928,32970,33012,33054,33096,33119,33246,33288,33330,33372,33414,33936,34000,34034,34143,34343,34474,34519,34541,34546,34551,34556,34562,34567,34668,34992,35016,35021,35026,35060,35094,35147,35194,35246,35487,35719,35823,35893,36267,37058,37100,37279,37328,38655,38755,38760,38764,38768
 );
 
 $avaliacoes_com_competencias = $DB->get_records_sql('
@@ -211,7 +211,7 @@ foreach ($avaliacoes_com_competencias as $dados) {
 			),
 			html_writer::img(
 				$OUTPUT->pix_url('i/competencies'),
-				get_string('gradeassigncompetencies_submit', 'local_autocompetencygrade')
+				get_string('gradeassigncompetencies_submit', 'local_autocompgrade')
 			)
 		),
 		sizeof(${$var_tabledata}) + 1 . '.',
@@ -247,7 +247,7 @@ foreach ($avaliacoes_com_competencias as $dados) {
 	);
 
 	if ($atualizar_todas === 1 && $dados->competencias_atualizadas === 'Não' && $contagem < 100) {
-		$result = local_autocompetencygrade\autocompetencygrade::gradeassigncompetencies_printableresult($dados->avaliacaoid, $dados->estudanteid, $dados->disciplinaid);
+		$result = local_autocompgrade\autocompgrade::gradeassigncompetencies_printableresult($dados->avaliacaoid, $dados->estudanteid, $dados->disciplinaid);
 
 		echo $result;
 
@@ -259,36 +259,36 @@ foreach ($avaliacoes_com_competencias as $dados) {
 
 $pageparams['selectoptions'] = $selectoptions;
 
-echo html_writer::tag('h3', get_string('gradeassigncompetencies_instruction', 'local_autocompetencygrade'));
+echo html_writer::tag('h3', get_string('gradeassigncompetencies_instruction', 'local_autocompgrade'));
 
 $mform = new gradeassigncompetencies_form(null, $pageparams);
 
 $mform->display();
 
-echo html_writer::tag('h3', get_string('gradeassigncompetencies_latestgradingsnotupdated', 'local_autocompetencygrade'));
+echo html_writer::tag('h3', get_string('gradeassigncompetencies_latestgradingsnotupdated', 'local_autocompgrade'));
 
 $table = new html_table();
 $table->head = array(
-	get_string('gradeassigncompetencies_submit', 'local_autocompetencygrade'),
+	get_string('gradeassigncompetencies_submit', 'local_autocompgrade'),
 	'#',
 	get_string('pluginname', 'mod_assign'),
-	get_string('gradeassigncompetencies_student', 'local_autocompetencygrade'),
-	get_string('gradeassigncompetencies_gradingdate', 'local_autocompetencygrade'),
+	get_string('gradeassigncompetencies_student', 'local_autocompgrade'),
+	get_string('gradeassigncompetencies_gradingdate', 'local_autocompgrade'),
 	'Competências atualizadas'
 );
 $table->data = $tabledata_nao_atualizadas;
 
 echo html_writer::table($table);
 
-echo html_writer::tag('h3', get_string('gradeassigncompetencies_latestgradingsupdated', 'local_autocompetencygrade'));
+echo html_writer::tag('h3', get_string('gradeassigncompetencies_latestgradingsupdated', 'local_autocompgrade'));
 
 $table = new html_table();
 $table->head = array(
-	get_string('gradeassigncompetencies_submit', 'local_autocompetencygrade'),
+	get_string('gradeassigncompetencies_submit', 'local_autocompgrade'),
 	'#',
 	get_string('pluginname', 'mod_assign'),
-	get_string('gradeassigncompetencies_student', 'local_autocompetencygrade'),
-	get_string('gradeassigncompetencies_gradingdate', 'local_autocompetencygrade'),
+	get_string('gradeassigncompetencies_student', 'local_autocompgrade'),
+	get_string('gradeassigncompetencies_gradingdate', 'local_autocompgrade'),
 	'Competências atualizadas'
 );
 $table->data = $tabledata_atualizadas;

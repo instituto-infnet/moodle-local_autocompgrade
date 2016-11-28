@@ -2,7 +2,7 @@
 /**
  * Plugin version info
  *
- * @package    local_autocompetencygrade
+ * @package    local_autocompgrade
  * @copyright  2016 Instituto Infnet
  */
 
