@@ -10,13 +10,27 @@
 
 require_once(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/classes/autocompgrade.php');
+require_once(__DIR__ . '/classes/consistencycheck_form.php');
 require_once($CFG->libdir . '/adminlib.php');
 
 global $DB;
 
-$avaliacoes = local_autocompgrade\autocompgrade::$avaliacoes_3T;
+$bloco = optional_param('bloco', null, PARAM_RAW);
+$pageparams = array(
+	'trimestre' => optional_param('trimestre', null, PARAM_ALPHANUM)
+);
 
-$PAGE->set_url('/local/autocompgrade/consistencycheck.php');
+if (isset($bloco)) {
+	$pageparams['trimestre'] = $bloco[0];
+	$pageparams['bloco'] = $bloco[5];
+}/* else if isset($pageparams['trimestre']) {
+
+}*/
+
+
+$url = '/local/autocompgrade/consistencycheck.php';
+
+$PAGE->set_url($url, $pageparams);
 $context = context_system::instance();
 $PAGE->set_context($context);
 $PAGE->set_title(get_string('consistencycheck', 'local_autocompgrade'));
@@ -28,6 +42,108 @@ require_login();
 require_capability('moodle/competency:competencymanage', $context);
 
 echo $OUTPUT->header() . $OUTPUT->heading(get_string('consistencycheck', 'local_autocompgrade'));
+
+$blocos = $DB->get_records_sql('
+	select
+		CONCAT(acgc.endyear, "T", acgc.endtrimester, "-", bloco.id) trimestrebloco,
+		CONCAT(acgc.endyear, "T", acgc.endtrimester) trimestreid,
+		CONCAT(acgc.endyear, "T", acgc.endtrimester) trimestre,
+		modalidade.id modalidadeid,
+		modalidade.name modalidade,
+		escola.id escolaid,
+		escola.name escola,
+		programa.id programaid,
+		programa.name programa,
+		classe.id classeid,
+		classe.name classe,
+		bloco.id blocoid,
+		bloco.name bloco
+	from mdl_local_autocompgrade_courses acgc
+		join mdl_course_modules cm on cm.id = acgc.assigncmid
+		join mdl_course disciplina on disciplina.id = cm.course
+		join mdl_course_categories bloco on bloco.id = disciplina.category
+		join mdl_course_categories classe on classe.id = bloco.parent
+		join mdl_course_categories programa on programa.id = classe.parent
+		join mdl_course_categories escola on escola.id = programa.parent
+		join mdl_course_categories modalidade on modalidade.id = escola.parent
+		join mdl_modules m on m.id = cm.module
+		join mdl_assign asg on asg.id = cm.instance
+	where m.name = "assign"
+	group by trimestre, bloco.id
+	union all
+	select distinct
+		CONCAT(acgc.endyear, "T", acgc.endtrimester, "-0") trimestrebloco,
+		CONCAT(acgc.endyear, "T", acgc.endtrimester) trimestreid,
+		CONCAT(acgc.endyear, "T", acgc.endtrimester) trimestre,
+		0 modalidadeid,
+		"(Todas as modalidades)" modalidade,
+		0 escolaid,
+		"(Todas as escolas)" escola,
+		0 programaid,
+		"(Todos os programas)" programa,
+		0 classeid,
+		"(Todas as classes)" classe,
+		0 blocoid,
+		"(Todos os blocos)" bloco
+	from mdl_local_autocompgrade_courses acgc
+	union all
+	select "0-0" trimestrebloco,
+		0 trimestreid,
+		"(Todos os trimestres)" trimestre,
+		0 modalidadeid,
+		"(Todas as modalidades)" modalidade,
+		0 escolaid,
+		"(Todas as escolas)" escola,
+		0 programaid,
+		"(Todos os programas)" programa,
+		0 classeid,
+		"(Todas as classes)" classe,
+		0 blocoid,
+		"(Todos os blocos)" bloco
+	order by trimestre,
+		modalidade,
+		escola,
+		programa,
+		classe,
+		bloco
+');
+
+foreach ($blocos as $dados) {
+	if (!isset($selectoptions['trimestres'][$dados->trimestreid])) {
+		$selectoptions['trimestres'][$dados->trimestreid] = $dados->trimestre;
+	}
+
+	if (!isset($selectoptions['modalidades'][$dados->trimestreid][$dados->modalidadeid])) {
+		$selectoptions['modalidades'][$dados->trimestreid][$dados->modalidadeid] = $dados->modalidade;
+	}
+
+	if (!isset($selectoptions['escolas'][$dados->trimestreid][$dados->modalidadeid][$dados->escolaid])) {
+		$selectoptions['escolas'][$dados->trimestreid][$dados->modalidadeid][$dados->escolaid] = $dados->escola;
+	}
+
+	if (!isset($selectoptions['programas'][$dados->trimestreid][$dados->modalidadeid][$dados->escolaid][$dados->programaid])) {
+		$selectoptions['programas'][$dados->trimestreid][$dados->modalidadeid][$dados->escolaid][$dados->programaid] = $dados->programa;
+	}
+
+	if (!isset($selectoptions['classes'][$dados->trimestreid][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid])) {
+		$selectoptions['classes'][$dados->trimestreid][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid] = $dados->classe;
+	}
+
+	if (!isset($selectoptions['blocos'][$dados->trimestreid][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid])) {
+		$selectoptions['blocos'][$dados->trimestreid][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid] = $dados->bloco;
+	}
+}
+
+print_object($bloco);
+print_object($pageparams);
+
+$pageparams['selectoptions'] = $selectoptions;
+
+echo html_writer::tag('h3', get_string('consistencycheck_filter', 'local_autocompgrade'));
+
+$mform = new consistencycheck_form(null, $pageparams);
+
+$mform->display();
 
 $consulta = $DB->get_records_sql('
 	select
