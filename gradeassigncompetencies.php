@@ -228,7 +228,7 @@ foreach ($avaliacoes_com_competencias as $dados) {
 					'action' => 'grading'
 				)
 			),
-			implode(' > ', array($dados->trimestre, $dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
+			'(' . $dados->trimestre . ') ' . implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
 			array(
 				'target' => '_blank'
 			)
