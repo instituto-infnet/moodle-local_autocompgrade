@@ -23,10 +23,7 @@ $pageparams = array(
 if (isset($bloco)) {
 	$pageparams['trimestre'] = $bloco[0];
 	$pageparams['bloco'] = $bloco[5];
-}/* else if isset($pageparams['trimestre']) {
-
-}*/
-
+}
 
 $url = '/local/autocompgrade/consistencycheck.php';
 
@@ -133,9 +130,6 @@ foreach ($blocos as $dados) {
 		$selectoptions['blocos'][$dados->trimestreid][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid] = $dados->bloco;
 	}
 }
-
-print_object($bloco);
-print_object($pageparams);
 
 $pageparams['selectoptions'] = $selectoptions;
 
