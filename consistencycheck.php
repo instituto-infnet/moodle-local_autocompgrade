@@ -182,6 +182,8 @@ $consulta = $DB->get_records_sql('
 			and cmcomp.competencyid = comp.id
 		left join mdl_competency_templatecomp comptpl on comptpl.competencyid = comp.id
 	where m.name = "assign"
+		and COALESCE(?, CONCAT(acgc.endyear, "T", acgc.endtrimester)) in (0, CONCAT(acgc.endyear, "T", acgc.endtrimester))
+		and COALESCE(?, bloco.id) in (0, bloco.id)
 	group by cm.id
 	order by modalidade,
 		escola,
@@ -190,7 +192,7 @@ $consulta = $DB->get_records_sql('
 		bloco,
 		disciplina,
 		avaliacao
-');
+', array($pageparams['trimestre'], $pageparams['bloco']));
 
 $frameworks_escala_incorreta = array();
 $cursos_faltando_competencias = array();
@@ -209,7 +211,7 @@ foreach ($consulta as $modid => $dados) {
 						'return' => 'competencies'
 					)
 				),
-				implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
+				'(' . $dados->trimestre . ') ' . implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
 				array(
 					'target' => '_blank'
 				)
@@ -228,7 +230,7 @@ foreach ($consulta as $modid => $dados) {
 						'courseid' => $dados->course
 					)
 				),
-				implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
+				'(' . $dados->trimestre . ') ' . implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
 				array(
 					'target' => '_blank'
 				)
@@ -247,7 +249,7 @@ foreach ($consulta as $modid => $dados) {
 						'update' => $modid
 					)
 				),
-				implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
+				'(' . $dados->trimestre . ') ' . implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
 				array(
 					'target' => '_blank'
 				)
@@ -266,7 +268,7 @@ foreach ($consulta as $modid => $dados) {
 						'pagecontextid' => $context->id
 					)
 				),
-				implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
+				'(' . $dados->trimestre . ') ' . implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
 				array(
 					'target' => '_blank'
 				)
@@ -327,6 +329,7 @@ if (!empty($table->data)) {
 $consulta = $DB->get_records_sql('
 	select
 		ga.id,
+		CONCAT(acgc.endyear, "T", acgc.endtrimester) trimestre,
 		modalidade.name modalidade,
 		escola.name escola,
 		programa.name programa,
@@ -335,7 +338,8 @@ $consulta = $DB->get_records_sql('
 		disciplina.fullname disciplina,
 		asg.name avaliacao,
 		COUNT(1) rubricas_sem_competencia
-	from mdl_course_modules cm
+	from mdl_local_autocompgrade_courses acgc
+		join mdl_course_modules cm on cm.id = acgc.assigncmid
 		join mdl_course disciplina on disciplina.id = cm.course
 		join mdl_course_categories bloco on bloco.id = disciplina.category
 		join mdl_course_categories classe on classe.id = bloco.parent
@@ -357,9 +361,8 @@ $consulta = $DB->get_records_sql('
 		) comp on comp.cmid = cm.id
 			and comp.idnumber = LEFT(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(grc.description, "[c]", ""), "\n", ""), "\r", ""), "\t", ""), " ", ""), LOCATE(".", REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(grc.description, "[c]", ""), "\n", ""), "\r", ""), "\t", ""), " ", "")) - 1)
 	where m.name = "assign"
-		and cm.id in (' .
-	implode(',', $avaliacoes) .
-		')
+		and COALESCE(?, CONCAT(acgc.endyear, "T", acgc.endtrimester)) in (0, CONCAT(acgc.endyear, "T", acgc.endtrimester))
+		and COALESCE(?, bloco.id) in (0, bloco.id)
 		and comp.idnumber is null
 	group by cm.id
 	order by modalidade,
@@ -369,7 +372,7 @@ $consulta = $DB->get_records_sql('
 		bloco,
 		disciplina,
 		avaliacao
-');
+', array($pageparams['trimestre'], $pageparams['bloco']));
 
 echo html_writer::tag('h3', get_string('consistencycheck_rubricswithoutcompetency', 'local_autocompgrade'));
 
@@ -391,7 +394,7 @@ foreach ($consulta as $areaid => $dados) {
 					'areaid' => $areaid
 				)
 			),
-			implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
+			'(' . $dados->trimestre . ') ' . implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
 			array(
 				'target' => '_blank'
 			)
@@ -426,6 +429,7 @@ $consulta = $DB->get_records_sql('
 		cm.id,
 		cm.course,
 		compfwk.id frameworkid,
+		CONCAT(acgc.endyear, "T", acgc.endtrimester) trimestre,
 		modalidade.name modalidade,
 		escola.name escola,
 		programa.name programa,
@@ -436,7 +440,8 @@ $consulta = $DB->get_records_sql('
 		comptpl.templateid,
 		GROUP_CONCAT(distinct CONCAT_WS("-", usr.id, CONCAT_WS(" ", usr.firstname, usr.lastname)) order by usr.firstname, usr.lastname) estudantes,
 		GROUP_CONCAT(distinct CONCAT_WS("-", coh.id, coh.name) order by coh.name, coh.id) coortes
-	from mdl_course_modules cm
+	from mdl_local_autocompgrade_courses acgc
+		join mdl_course_modules cm on cm.id = acgc.assigncmid
 		join mdl_course disciplina on disciplina.id = cm.course
 		join mdl_course_categories bloco on bloco.id = disciplina.category
 		join mdl_course_categories classe on classe.id = bloco.parent
@@ -461,9 +466,8 @@ $consulta = $DB->get_records_sql('
 		and ctx.contextlevel = 50
 		and r.shortname = "student"
 		and pln.id is null
-		and cm.id in (' .
-	implode(',', $avaliacoes) .
-		')
+		and COALESCE(?, CONCAT(acgc.endyear, "T", acgc.endtrimester)) in (0, CONCAT(acgc.endyear, "T", acgc.endtrimester))
+		and COALESCE(?, bloco.id) in (0, bloco.id)
 	group by cm.id
 	order by modalidade,
 		escola,
@@ -472,7 +476,7 @@ $consulta = $DB->get_records_sql('
 		bloco,
 		disciplina,
 		avaliacao
-');
+', array($pageparams['trimestre'], $pageparams['bloco']));
 
 echo html_writer::tag('h3', get_string('consistencycheck_studentswithoutplan', 'local_autocompgrade'));
 
@@ -531,7 +535,7 @@ foreach ($consulta as $cmid => $dados) {
 					'pagecontextid' => $context->id
 				)
 			),
-			implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
+			'(' . $dados->trimestre . ') ' . implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
 			array(
 				'target' => '_blank'
 			)
@@ -548,54 +552,8 @@ if (!empty($table->data)) {
 }
 
 $consulta = $DB->get_records_sql('
-	select
-		ga.id,
-		modalidade.name modalidade,
-		escola.name escola,
-		programa.name programa,
-		classe.name classe,
-		bloco.name bloco,
-		disciplina.fullname disciplina,
-		asg.name avaliacao,
-		COUNT(1) rubricas_sem_competencia
-	from mdl_course_modules cm
-		join mdl_course disciplina on disciplina.id = cm.course
-		join mdl_course_categories bloco on bloco.id = disciplina.category
-		join mdl_course_categories classe on classe.id = bloco.parent
-		join mdl_course_categories programa on programa.id = classe.parent
-		join mdl_course_categories escola on escola.id = programa.parent
-		join mdl_course_categories modalidade on modalidade.id = escola.parent
-		join mdl_modules m on m.id = cm.module
-		join mdl_assign asg on asg.id = cm.instance
-		join mdl_context c on cm.id = c.instanceid
-		join mdl_grading_areas ga on c.id = ga.contextid
-		join mdl_grading_definitions gd on ga.id = gd.areaid
-		join mdl_gradingform_rubric_criteria grc on grc.definitionid = gd.id
-		left join (
-			select cmcomp.cmid,
-				comp.idnumber,
-				comp.shortname
-			from mdl_competency_modulecomp cmcomp
-			join mdl_competency as comp on comp.id = cmcomp.competencyid
-		) comp on comp.cmid = cm.id
-			and comp.idnumber = LEFT(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(grc.description, "[c]", ""), "\n", ""), "\r", ""), "\t", ""), " ", ""), LOCATE(".", REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(grc.description, "[c]", ""), "\n", ""), "\r", ""), "\t", ""), " ", "")) - 1)
-	where m.name = "assign"
-		and cm.id in (' .
-	implode(',', $avaliacoes) .
-		')
-		and comp.idnumber is null
-	group by cm.id
-	order by modalidade,
-		escola,
-		programa,
-		classe,
-		bloco,
-		disciplina,
-		avaliacao
-');
-
-$consulta = $DB->get_records_sql('
 	select CONCAT(cm.id, "-", comp.id) cmcompid,
+		CONCAT(acgc.endyear, "T", acgc.endtrimester) trimestre,
 		modalidade.name modalidade,
 		escola.name escola,
 		programa.name programa,
@@ -610,7 +568,8 @@ $consulta = $DB->get_records_sql('
 		comp.shortname,
 		comp.competencyframeworkid,
 		COUNT(grc.id) qtd_rubricas
-	from mdl_course_modules cm
+	from mdl_local_autocompgrade_courses acgc
+		join mdl_course_modules cm on cm.id = acgc.assigncmid
 		join mdl_course disciplina on disciplina.id = cm.course
 		join mdl_course_categories bloco on bloco.id = disciplina.category
 		join mdl_course_categories classe on classe.id = bloco.parent
@@ -627,9 +586,8 @@ $consulta = $DB->get_records_sql('
 		left join mdl_gradingform_rubric_criteria grc on grc.definitionid = gd.id
 			and comp.idnumber = LEFT(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(grc.description, "[c]", ""), "\n", ""), "\r", ""), "\t", ""), " ", ""), LOCATE(".", REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(grc.description, "[c]", ""), "\n", ""), "\r", ""), "\t", ""), " ", "")) - 1)
 	where m.name = "assign"
-		and cm.id in (' .
-	implode(',', $avaliacoes) .
-		')
+		and COALESCE(?, CONCAT(acgc.endyear, "T", acgc.endtrimester)) in (0, CONCAT(acgc.endyear, "T", acgc.endtrimester))
+		and COALESCE(?, bloco.id) in (0, bloco.id)
 	group by cm.id,
 		comp.id
 	having qtd_rubricas < 4
@@ -641,7 +599,7 @@ $consulta = $DB->get_records_sql('
 		disciplina,
 		avaliacao,
 		CAST(comp.idnumber as unsigned)
-');
+', array($pageparams['trimestre'], $pageparams['bloco']));
 
 $competencias_sem_rubricas = array();
 $competencias_poucas_rubricas = array();
@@ -657,7 +615,7 @@ foreach ($consulta as $dados) {
 					'areaid' => $dados->areaid
 				)
 			),
-			implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
+			'(' . $dados->trimestre . ') ' . implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
 			array(
 				'target' => '_blank'
 			)
