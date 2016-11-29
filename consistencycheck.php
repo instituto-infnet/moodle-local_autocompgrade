@@ -4,36 +4,153 @@
 /**
  * Consistency check for automatic competency grading.
  *
- * @package    local_autocompetencygrade
+ * @package    local_autocompgrade
  * @copyright  2016 Instituto Infnet
 */
 
 require_once(__DIR__ . '/../../config.php');
-require_once(__DIR__ . '/classes/autocompetencygrade.php');
+require_once(__DIR__ . '/classes/autocompgrade.php');
+require_once(__DIR__ . '/classes/consistencycheck_form.php');
 require_once($CFG->libdir . '/adminlib.php');
 
 global $DB;
 
-$avaliacoes = local_autocompetencygrade\autocompetencygrade::$avaliacoes_3T;
+$bloco = optional_param('bloco', null, PARAM_RAW);
+$pageparams = array(
+	'trimestre' => optional_param('trimestre', null, PARAM_ALPHANUM)
+);
 
-$PAGE->set_url('/local/autocompetencygrade/consistencycheck.php');
+if (isset($bloco)) {
+	$pageparams['trimestre'] = $bloco[0];
+	$pageparams['bloco'] = $bloco[5];
+}/* else if isset($pageparams['trimestre']) {
+
+}*/
+
+
+$url = '/local/autocompgrade/consistencycheck.php';
+
+$PAGE->set_url($url, $pageparams);
 $context = context_system::instance();
 $PAGE->set_context($context);
-$PAGE->set_title(get_string('consistencycheck', 'local_autocompetencygrade'));
+$PAGE->set_title(get_string('consistencycheck', 'local_autocompgrade'));
 $PAGE->set_pagelayout('admin');
 
-admin_externalpage_setup('local_autocompetencygrade_consistencycheck');
+admin_externalpage_setup('local_autocompgrade_consistencycheck');
 
 require_login();
 require_capability('moodle/competency:competencymanage', $context);
 
-echo $OUTPUT->header() . $OUTPUT->heading(get_string('consistencycheck', 'local_autocompetencygrade'));
+echo $OUTPUT->header() . $OUTPUT->heading(get_string('consistencycheck', 'local_autocompgrade'));
+
+$blocos = $DB->get_records_sql('
+	select
+		CONCAT(acgc.endyear, "T", acgc.endtrimester, "-", bloco.id) trimestrebloco,
+		CONCAT(acgc.endyear, "T", acgc.endtrimester) trimestreid,
+		CONCAT(acgc.endyear, "T", acgc.endtrimester) trimestre,
+		modalidade.id modalidadeid,
+		modalidade.name modalidade,
+		escola.id escolaid,
+		escola.name escola,
+		programa.id programaid,
+		programa.name programa,
+		classe.id classeid,
+		classe.name classe,
+		bloco.id blocoid,
+		bloco.name bloco
+	from mdl_local_autocompgrade_courses acgc
+		join mdl_course_modules cm on cm.id = acgc.assigncmid
+		join mdl_course disciplina on disciplina.id = cm.course
+		join mdl_course_categories bloco on bloco.id = disciplina.category
+		join mdl_course_categories classe on classe.id = bloco.parent
+		join mdl_course_categories programa on programa.id = classe.parent
+		join mdl_course_categories escola on escola.id = programa.parent
+		join mdl_course_categories modalidade on modalidade.id = escola.parent
+		join mdl_modules m on m.id = cm.module
+		join mdl_assign asg on asg.id = cm.instance
+	where m.name = "assign"
+	group by trimestre, bloco.id
+	union all
+	select distinct
+		CONCAT(acgc.endyear, "T", acgc.endtrimester, "-0") trimestrebloco,
+		CONCAT(acgc.endyear, "T", acgc.endtrimester) trimestreid,
+		CONCAT(acgc.endyear, "T", acgc.endtrimester) trimestre,
+		0 modalidadeid,
+		"(Todas as modalidades)" modalidade,
+		0 escolaid,
+		"(Todas as escolas)" escola,
+		0 programaid,
+		"(Todos os programas)" programa,
+		0 classeid,
+		"(Todas as classes)" classe,
+		0 blocoid,
+		"(Todos os blocos)" bloco
+	from mdl_local_autocompgrade_courses acgc
+	union all
+	select "0-0" trimestrebloco,
+		0 trimestreid,
+		"(Todos os trimestres)" trimestre,
+		0 modalidadeid,
+		"(Todas as modalidades)" modalidade,
+		0 escolaid,
+		"(Todas as escolas)" escola,
+		0 programaid,
+		"(Todos os programas)" programa,
+		0 classeid,
+		"(Todas as classes)" classe,
+		0 blocoid,
+		"(Todos os blocos)" bloco
+	order by trimestre,
+		modalidade,
+		escola,
+		programa,
+		classe,
+		bloco
+');
+
+foreach ($blocos as $dados) {
+	if (!isset($selectoptions['trimestres'][$dados->trimestreid])) {
+		$selectoptions['trimestres'][$dados->trimestreid] = $dados->trimestre;
+	}
+
+	if (!isset($selectoptions['modalidades'][$dados->trimestreid][$dados->modalidadeid])) {
+		$selectoptions['modalidades'][$dados->trimestreid][$dados->modalidadeid] = $dados->modalidade;
+	}
+
+	if (!isset($selectoptions['escolas'][$dados->trimestreid][$dados->modalidadeid][$dados->escolaid])) {
+		$selectoptions['escolas'][$dados->trimestreid][$dados->modalidadeid][$dados->escolaid] = $dados->escola;
+	}
+
+	if (!isset($selectoptions['programas'][$dados->trimestreid][$dados->modalidadeid][$dados->escolaid][$dados->programaid])) {
+		$selectoptions['programas'][$dados->trimestreid][$dados->modalidadeid][$dados->escolaid][$dados->programaid] = $dados->programa;
+	}
+
+	if (!isset($selectoptions['classes'][$dados->trimestreid][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid])) {
+		$selectoptions['classes'][$dados->trimestreid][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid] = $dados->classe;
+	}
+
+	if (!isset($selectoptions['blocos'][$dados->trimestreid][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid])) {
+		$selectoptions['blocos'][$dados->trimestreid][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid] = $dados->bloco;
+	}
+}
+
+print_object($bloco);
+print_object($pageparams);
+
+$pageparams['selectoptions'] = $selectoptions;
+
+echo html_writer::tag('h3', get_string('consistencycheck_filter', 'local_autocompgrade'));
+
+$mform = new consistencycheck_form(null, $pageparams);
+
+$mform->display();
 
 $consulta = $DB->get_records_sql('
 	select
 		cm.id,
 		cm.course,
 		compfwk.id frameworkid,
+		CONCAT(acgc.endyear, "T", acgc.endtrimester) trimestre,
 		modalidade.name modalidade,
 		escola.name escola,
 		programa.name programa,
@@ -46,7 +163,8 @@ $consulta = $DB->get_records_sql('
 		COUNT(distinct cmcomp.id) competencias_modulo,
 		COUNT(distinct comps_fwk.id) competencias_fwk,
 		COUNT(distinct comptpl.templateid) templates
-	from mdl_course_modules cm
+	from mdl_local_autocompgrade_courses acgc
+		join mdl_course_modules cm on cm.id = acgc.assigncmid
 		join mdl_course disciplina on disciplina.id = cm.course
 		join mdl_course_categories bloco on bloco.id = disciplina.category
 		join mdl_course_categories classe on classe.id = bloco.parent
@@ -64,9 +182,8 @@ $consulta = $DB->get_records_sql('
 			and cmcomp.competencyid = comp.id
 		left join mdl_competency_templatecomp comptpl on comptpl.competencyid = comp.id
 	where m.name = "assign"
-		and cm.id in (' .
-	implode(',', $avaliacoes) .
-		')
+		and COALESCE(?, CONCAT(acgc.endyear, "T", acgc.endtrimester)) in (0, CONCAT(acgc.endyear, "T", acgc.endtrimester))
+		and COALESCE(?, bloco.id) in (0, bloco.id)
 	group by cm.id
 	order by modalidade,
 		escola,
@@ -75,7 +192,7 @@ $consulta = $DB->get_records_sql('
 		bloco,
 		disciplina,
 		avaliacao
-');
+', array($pageparams['trimestre'], $pageparams['bloco']));
 
 $frameworks_escala_incorreta = array();
 $cursos_faltando_competencias = array();
@@ -94,7 +211,7 @@ foreach ($consulta as $modid => $dados) {
 						'return' => 'competencies'
 					)
 				),
-				implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
+				'(' . $dados->trimestre . ') ' . implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
 				array(
 					'target' => '_blank'
 				)
@@ -113,7 +230,7 @@ foreach ($consulta as $modid => $dados) {
 						'courseid' => $dados->course
 					)
 				),
-				implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
+				'(' . $dados->trimestre . ') ' . implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
 				array(
 					'target' => '_blank'
 				)
@@ -132,7 +249,7 @@ foreach ($consulta as $modid => $dados) {
 						'update' => $modid
 					)
 				),
-				implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
+				'(' . $dados->trimestre . ') ' . implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
 				array(
 					'target' => '_blank'
 				)
@@ -151,7 +268,7 @@ foreach ($consulta as $modid => $dados) {
 						'pagecontextid' => $context->id
 					)
 				),
-				implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
+				'(' . $dados->trimestre . ') ' . implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
 				array(
 					'target' => '_blank'
 				)
@@ -161,7 +278,7 @@ foreach ($consulta as $modid => $dados) {
 
 }
 
-echo html_writer::tag('h3', get_string('consistencycheck_wrongframeworkscale', 'local_autocompetencygrade'));
+echo html_writer::tag('h3', get_string('consistencycheck_wrongframeworkscale', 'local_autocompgrade'));
 
 $table = new html_table();
 $table->head = array(
@@ -174,44 +291,45 @@ $table->data = $frameworks_escala_incorreta;
 if (!empty($table->data)) {
 	echo html_writer::table($table);
 } else {
-	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompetencygrade'), array('class' => 'alert alert-success'));
+	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompgrade'), array('class' => 'alert alert-success'));
 }
 
-echo html_writer::tag('h3', get_string('consistencycheck_coursesmissingcompetencies', 'local_autocompetencygrade'));
+echo html_writer::tag('h3', get_string('consistencycheck_coursesmissingcompetencies', 'local_autocompgrade'));
 
 $table = new html_table();
 $table->head = array(
 	'#',
 	get_string('pluginname', 'mod_assign'),
-	get_string('consistencycheck_numcompetencies', 'local_autocompetencygrade')
+	get_string('consistencycheck_numcompetencies', 'local_autocompgrade')
 );
 $table->data = $cursos_faltando_competencias;
 
 if (!empty($table->data)) {
 	echo html_writer::table($table);
 } else {
-	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompetencygrade'), array('class' => 'alert alert-success'));
+	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompgrade'), array('class' => 'alert alert-success'));
 }
 
-echo html_writer::tag('h3', get_string('consistencycheck_modulesmissingcompetencies', 'local_autocompetencygrade'));
+echo html_writer::tag('h3', get_string('consistencycheck_modulesmissingcompetencies', 'local_autocompgrade'));
 
 $table = new html_table();
 $table->head = array(
 	'#',
 	get_string('pluginname', 'mod_assign'),
-	get_string('consistencycheck_numcompetencies', 'local_autocompetencygrade')
+	get_string('consistencycheck_numcompetencies', 'local_autocompgrade')
 );
 $table->data = $avaliacoes_faltando_competencias;
 
 if (!empty($table->data)) {
 	echo html_writer::table($table);
 } else {
-	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompetencygrade'), array('class' => 'alert alert-success'));
+	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompgrade'), array('class' => 'alert alert-success'));
 }
 
 $consulta = $DB->get_records_sql('
 	select
 		ga.id,
+		CONCAT(acgc.endyear, "T", acgc.endtrimester) trimestre,
 		modalidade.name modalidade,
 		escola.name escola,
 		programa.name programa,
@@ -220,7 +338,8 @@ $consulta = $DB->get_records_sql('
 		disciplina.fullname disciplina,
 		asg.name avaliacao,
 		COUNT(1) rubricas_sem_competencia
-	from mdl_course_modules cm
+	from mdl_local_autocompgrade_courses acgc
+		join mdl_course_modules cm on cm.id = acgc.assigncmid
 		join mdl_course disciplina on disciplina.id = cm.course
 		join mdl_course_categories bloco on bloco.id = disciplina.category
 		join mdl_course_categories classe on classe.id = bloco.parent
@@ -242,9 +361,8 @@ $consulta = $DB->get_records_sql('
 		) comp on comp.cmid = cm.id
 			and comp.idnumber = LEFT(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(grc.description, "[c]", ""), "\n", ""), "\r", ""), "\t", ""), " ", ""), LOCATE(".", REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(grc.description, "[c]", ""), "\n", ""), "\r", ""), "\t", ""), " ", "")) - 1)
 	where m.name = "assign"
-		and cm.id in (' .
-	implode(',', $avaliacoes) .
-		')
+		and COALESCE(?, CONCAT(acgc.endyear, "T", acgc.endtrimester)) in (0, CONCAT(acgc.endyear, "T", acgc.endtrimester))
+		and COALESCE(?, bloco.id) in (0, bloco.id)
 		and comp.idnumber is null
 	group by cm.id
 	order by modalidade,
@@ -254,15 +372,15 @@ $consulta = $DB->get_records_sql('
 		bloco,
 		disciplina,
 		avaliacao
-');
+', array($pageparams['trimestre'], $pageparams['bloco']));
 
-echo html_writer::tag('h3', get_string('consistencycheck_rubricswithoutcompetency', 'local_autocompetencygrade'));
+echo html_writer::tag('h3', get_string('consistencycheck_rubricswithoutcompetency', 'local_autocompgrade'));
 
 $table = new html_table();
 $table->head = array(
 	'#',
 	get_string('pluginname', 'mod_assign'),
-	get_string('consistencycheck_numrubrics', 'local_autocompetencygrade')
+	get_string('consistencycheck_numrubrics', 'local_autocompgrade')
 );
 $table->data = array();
 
@@ -276,7 +394,7 @@ foreach ($consulta as $areaid => $dados) {
 					'areaid' => $areaid
 				)
 			),
-			implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
+			'(' . $dados->trimestre . ') ' . implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
 			array(
 				'target' => '_blank'
 			)
@@ -288,10 +406,10 @@ foreach ($consulta as $areaid => $dados) {
 if (!empty($table->data)) {
 	echo html_writer::table($table);
 } else {
-	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompetencygrade'), array('class' => 'alert alert-success'));
+	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompgrade'), array('class' => 'alert alert-success'));
 }
 
-echo html_writer::tag('h3', get_string('consistencycheck_frameworkswithouttemplate', 'local_autocompetencygrade'));
+echo html_writer::tag('h3', get_string('consistencycheck_frameworkswithouttemplate', 'local_autocompgrade'));
 
 $table = new html_table();
 $table->head = array(
@@ -303,7 +421,7 @@ $table->data = $frameworks_sem_template;
 if (!empty($table->data)) {
 	echo html_writer::table($table);
 } else {
-	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompetencygrade'), array('class' => 'alert alert-success'));
+	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompgrade'), array('class' => 'alert alert-success'));
 }
 
 $consulta = $DB->get_records_sql('
@@ -311,6 +429,7 @@ $consulta = $DB->get_records_sql('
 		cm.id,
 		cm.course,
 		compfwk.id frameworkid,
+		CONCAT(acgc.endyear, "T", acgc.endtrimester) trimestre,
 		modalidade.name modalidade,
 		escola.name escola,
 		programa.name programa,
@@ -321,7 +440,8 @@ $consulta = $DB->get_records_sql('
 		comptpl.templateid,
 		GROUP_CONCAT(distinct CONCAT_WS("-", usr.id, CONCAT_WS(" ", usr.firstname, usr.lastname)) order by usr.firstname, usr.lastname) estudantes,
 		GROUP_CONCAT(distinct CONCAT_WS("-", coh.id, coh.name) order by coh.name, coh.id) coortes
-	from mdl_course_modules cm
+	from mdl_local_autocompgrade_courses acgc
+		join mdl_course_modules cm on cm.id = acgc.assigncmid
 		join mdl_course disciplina on disciplina.id = cm.course
 		join mdl_course_categories bloco on bloco.id = disciplina.category
 		join mdl_course_categories classe on classe.id = bloco.parent
@@ -346,9 +466,8 @@ $consulta = $DB->get_records_sql('
 		and ctx.contextlevel = 50
 		and r.shortname = "student"
 		and pln.id is null
-		and cm.id in (' .
-	implode(',', $avaliacoes) .
-		')
+		and COALESCE(?, CONCAT(acgc.endyear, "T", acgc.endtrimester)) in (0, CONCAT(acgc.endyear, "T", acgc.endtrimester))
+		and COALESCE(?, bloco.id) in (0, bloco.id)
 	group by cm.id
 	order by modalidade,
 		escola,
@@ -357,16 +476,16 @@ $consulta = $DB->get_records_sql('
 		bloco,
 		disciplina,
 		avaliacao
-');
+', array($pageparams['trimestre'], $pageparams['bloco']));
 
-echo html_writer::tag('h3', get_string('consistencycheck_studentswithoutplan', 'local_autocompetencygrade'));
+echo html_writer::tag('h3', get_string('consistencycheck_studentswithoutplan', 'local_autocompgrade'));
 
 $table = new html_table();
 $table->head = array(
 	'#',
 	get_string('pluginname', 'mod_assign'),
-	get_string('students', 'local_autocompetencygrade'),
-	get_string('consistencycheck_frameworkcohorts', 'local_autocompetencygrade')
+	get_string('students', 'local_autocompgrade'),
+	get_string('consistencycheck_frameworkcohorts', 'local_autocompgrade')
 );
 $table->data = array();
 foreach ($consulta as $cmid => $dados) {
@@ -416,7 +535,7 @@ foreach ($consulta as $cmid => $dados) {
 					'pagecontextid' => $context->id
 				)
 			),
-			implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
+			'(' . $dados->trimestre . ') ' . implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
 			array(
 				'target' => '_blank'
 			)
@@ -429,58 +548,12 @@ foreach ($consulta as $cmid => $dados) {
 if (!empty($table->data)) {
 	echo html_writer::table($table);
 } else {
-	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompetencygrade'), array('class' => 'alert alert-success'));
+	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompgrade'), array('class' => 'alert alert-success'));
 }
 
 $consulta = $DB->get_records_sql('
-	select
-		ga.id,
-		modalidade.name modalidade,
-		escola.name escola,
-		programa.name programa,
-		classe.name classe,
-		bloco.name bloco,
-		disciplina.fullname disciplina,
-		asg.name avaliacao,
-		COUNT(1) rubricas_sem_competencia
-	from mdl_course_modules cm
-		join mdl_course disciplina on disciplina.id = cm.course
-		join mdl_course_categories bloco on bloco.id = disciplina.category
-		join mdl_course_categories classe on classe.id = bloco.parent
-		join mdl_course_categories programa on programa.id = classe.parent
-		join mdl_course_categories escola on escola.id = programa.parent
-		join mdl_course_categories modalidade on modalidade.id = escola.parent
-		join mdl_modules m on m.id = cm.module
-		join mdl_assign asg on asg.id = cm.instance
-		join mdl_context c on cm.id = c.instanceid
-		join mdl_grading_areas ga on c.id = ga.contextid
-		join mdl_grading_definitions gd on ga.id = gd.areaid
-		join mdl_gradingform_rubric_criteria grc on grc.definitionid = gd.id
-		left join (
-			select cmcomp.cmid,
-				comp.idnumber,
-				comp.shortname
-			from mdl_competency_modulecomp cmcomp
-			join mdl_competency as comp on comp.id = cmcomp.competencyid
-		) comp on comp.cmid = cm.id
-			and comp.idnumber = LEFT(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(grc.description, "[c]", ""), "\n", ""), "\r", ""), "\t", ""), " ", ""), LOCATE(".", REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(grc.description, "[c]", ""), "\n", ""), "\r", ""), "\t", ""), " ", "")) - 1)
-	where m.name = "assign"
-		and cm.id in (' .
-	implode(',', $avaliacoes) .
-		')
-		and comp.idnumber is null
-	group by cm.id
-	order by modalidade,
-		escola,
-		programa,
-		classe,
-		bloco,
-		disciplina,
-		avaliacao
-');
-
-$consulta = $DB->get_records_sql('
 	select CONCAT(cm.id, "-", comp.id) cmcompid,
+		CONCAT(acgc.endyear, "T", acgc.endtrimester) trimestre,
 		modalidade.name modalidade,
 		escola.name escola,
 		programa.name programa,
@@ -495,7 +568,8 @@ $consulta = $DB->get_records_sql('
 		comp.shortname,
 		comp.competencyframeworkid,
 		COUNT(grc.id) qtd_rubricas
-	from mdl_course_modules cm
+	from mdl_local_autocompgrade_courses acgc
+		join mdl_course_modules cm on cm.id = acgc.assigncmid
 		join mdl_course disciplina on disciplina.id = cm.course
 		join mdl_course_categories bloco on bloco.id = disciplina.category
 		join mdl_course_categories classe on classe.id = bloco.parent
@@ -512,9 +586,8 @@ $consulta = $DB->get_records_sql('
 		left join mdl_gradingform_rubric_criteria grc on grc.definitionid = gd.id
 			and comp.idnumber = LEFT(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(grc.description, "[c]", ""), "\n", ""), "\r", ""), "\t", ""), " ", ""), LOCATE(".", REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(grc.description, "[c]", ""), "\n", ""), "\r", ""), "\t", ""), " ", "")) - 1)
 	where m.name = "assign"
-		and cm.id in (' .
-	implode(',', $avaliacoes) .
-		')
+		and COALESCE(?, CONCAT(acgc.endyear, "T", acgc.endtrimester)) in (0, CONCAT(acgc.endyear, "T", acgc.endtrimester))
+		and COALESCE(?, bloco.id) in (0, bloco.id)
 	group by cm.id,
 		comp.id
 	having qtd_rubricas < 4
@@ -526,7 +599,7 @@ $consulta = $DB->get_records_sql('
 		disciplina,
 		avaliacao,
 		CAST(comp.idnumber as unsigned)
-');
+', array($pageparams['trimestre'], $pageparams['bloco']));
 
 $competencias_sem_rubricas = array();
 $competencias_poucas_rubricas = array();
@@ -542,7 +615,7 @@ foreach ($consulta as $dados) {
 					'areaid' => $dados->areaid
 				)
 			),
-			implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
+			'(' . $dados->trimestre . ') ' . implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
 			array(
 				'target' => '_blank'
 			)
@@ -570,7 +643,7 @@ foreach ($consulta as $dados) {
 	${$var_tabledata}[] = $linha;
 }
 
-echo html_writer::tag('h3', get_string('consistencycheck_competencieswithoutrubrics', 'local_autocompetencygrade'));
+echo html_writer::tag('h3', get_string('consistencycheck_competencieswithoutrubrics', 'local_autocompgrade'));
 
 $table = new html_table();
 $table->head = array(
@@ -583,24 +656,24 @@ $table->data = $competencias_sem_rubricas;
 if (!empty($table->data)) {
 	echo html_writer::table($table);
 } else {
-	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompetencygrade'), array('class' => 'alert alert-success'));
+	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompgrade'), array('class' => 'alert alert-success'));
 }
 
-echo html_writer::tag('h3', get_string('consistencycheck_competencieswithoutenoughrubrics', 'local_autocompetencygrade'));
+echo html_writer::tag('h3', get_string('consistencycheck_competencieswithoutenoughrubrics', 'local_autocompgrade'));
 
 $table = new html_table();
 $table->head = array(
 	'#',
 	get_string('pluginname', 'mod_assign'),
 	get_string('pluginname', 'report_competency'),
-	get_string('consistencycheck_numrubrics', 'local_autocompetencygrade')
+	get_string('consistencycheck_numrubrics', 'local_autocompgrade')
 );
 $table->data = $competencias_poucas_rubricas;
 
 if (!empty($table->data)) {
 	echo html_writer::table($table);
 } else {
-	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompetencygrade'), array('class' => 'alert alert-success'));
+	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompgrade'), array('class' => 'alert alert-success'));
 }
 
 echo $OUTPUT->footer();

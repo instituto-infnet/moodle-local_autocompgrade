@@ -4,12 +4,12 @@
 /**
  * Script for automatic competency grading.
  *
- * @package    local_autocompetencygrade
+ * @package    local_autocompgrade
  * @copyright  2016 Instituto Infnet
 */
 
 require_once(__DIR__ . '/../../config.php');
-require_once(__DIR__ . '/classes/autocompetencygrade.php');
+require_once(__DIR__ . '/classes/autocompgrade.php');
 require_once(__DIR__ . '/classes/gradeassigncompetencies_form.php');
 require_once($CFG->libdir . '/adminlib.php');
 
@@ -23,51 +23,52 @@ $pageparams = array(
 );
 $atualizar_todas = optional_param('atualizar_todas', null, PARAM_BOOL);
 
+$index_courseid = 6;
+$index_avaliacaoid = 7;
+$index_userid = 8;
+
 if (isset($avaliacoes)) {
-	$pageparams['course'] = $avaliacoes[5];
-	$pageparams['cmid'] = $avaliacoes[6];
-	$pageparams['userid'] = $avaliacoes[7];
+	$pageparams['course'] = $avaliacoes[$index_courseid];
+	$pageparams['cmid'] = $avaliacoes[$index_avaliacaoid];
+	$pageparams['userid'] = $avaliacoes[$index_userid];
 } else if (isset($pageparams['cmid']) || isset($pageparams['userid'])) {
 	if (isset($pageparams['course'])) {
-		$avaliacoes[5] = $pageparams['course'];
+		$avaliacoes[$index_courseid] = $pageparams['course'];
 	}
 
 	if (isset($pageparams['cmid'])) {
-		$avaliacoes[6] = $pageparams['cmid'];
+		$avaliacoes[$index_avaliacaoid] = $pageparams['cmid'];
 	}
 
 	if (isset($pageparams['userid'])) {
-		$avaliacoes[7] = $pageparams['userid'];
+		$avaliacoes[$index_userid] = $pageparams['userid'];
 	}
 }
 
-$url = '/local/autocompetencygrade/gradeassigncompetencies.php';
+$url = '/local/autocompgrade/gradeassigncompetencies.php';
 
 $PAGE->set_url($url, $pageparams);
 $context = context_system::instance();
 $PAGE->set_context($context);
-$PAGE->set_title(get_string('pluginname', 'local_autocompetencygrade'));
+$PAGE->set_title(get_string('pluginname', 'local_autocompgrade'));
 $PAGE->set_pagelayout('admin');
 
-admin_externalpage_setup('local_autocompetencygrade_gradeassigncompetencies');
+admin_externalpage_setup('local_autocompgrade_gradeassigncompetencies');
 
 require_login();
 require_capability('moodle/competency:competencymanage', $context);
 
-echo $OUTPUT->header() . $OUTPUT->heading(get_string('gradeassigncompetencies', 'local_autocompetencygrade'));
+echo $OUTPUT->header() . $OUTPUT->heading(get_string('gradeassigncompetencies', 'local_autocompgrade'));
 
 $pageparams['avaliacoes'] = $avaliacoes;
 
 if (isset($pageparams['avaliacoes']) && !in_array(0, $pageparams)) {
-	echo local_autocompetencygrade\autocompetencygrade::gradeassigncompetencies_printableresult($pageparams['avaliacoes'][6], $pageparams['avaliacoes'][7], $pageparams['avaliacoes'][5]);
+	echo local_autocompgrade\autocompgrade::gradeassigncompetencies_printableresult($pageparams['avaliacoes'][$index_avaliacaoid], $pageparams['avaliacoes'][$index_userid], $pageparams['avaliacoes'][$index_courseid]);
 }
 
-$avaliacoes = array(
-	34281,34343,35823,35893,42273,36267,33096,33054,30207,35194,35147,35094,33288,33246,37058,37100,33372,33414,30011,34992,32928,32970,30072,33012,31620,31681,32758,32800,35719,32844,29991,32886,32705,33936,32643,32078,32009,29424,33119,32351,32445,30857,30925,34000,34474,34034,37279,37328,34546,34551,34541,33330,34519,34562,34567,34556,35246,35487,35060,38755,38764,38760,38768,35016,34668,27356,35026,35021,30433,38655,34143
-);
-
 $avaliacoes_com_competencias = $DB->get_records_sql('
-	select CONCAT_WS("-", cm.id, usr.id) cmid_usrid,
+	select CONCAT(cm.id, "-", usr.id) cmid_usrid,
+		CONCAT(acgc.endyear, "T", acgc.endtrimester) trimestre,
 		modalidade.id modalidadeid,
 		modalidade.name modalidade,
 		escola.id escolaid,
@@ -107,7 +108,8 @@ $avaliacoes_com_competencias = $DB->get_records_sql('
 				and usercomp.courseid = cm.course
 				and usercomp.userid = usr.id
 		) competencias_atualizadas
-	from mdl_course_modules cm
+	from mdl_local_autocompgrade_courses acgc
+		join mdl_course_modules cm on cm.id = acgc.assigncmid
 		join mdl_modules m on m.id = cm.module
 		join mdl_assign asg on asg.id = cm.instance
 		join mdl_course_sections cs on cs.id = cm.section
@@ -140,9 +142,7 @@ $avaliacoes_com_competencias = $DB->get_records_sql('
 			order by ag_maisrecente.timemodified desc
 			limit 1
 		)
-		and cm.id in (' .
-	implode(',', $avaliacoes) .
-		') and exists (
+		and exists (
 			select 1
 			from mdl_gradingform_rubric_fillings grf
 			where grf.instanceid = gin.id
@@ -152,6 +152,7 @@ $avaliacoes_com_competencias = $DB->get_records_sql('
 ');
 
 $selectoptions = array();
+$selectoptions['trimestres'] = array();
 $selectoptions['modalidades'] = array();
 $selectoptions['escolas'] = array();
 $selectoptions['programas'] = array();
@@ -166,36 +167,40 @@ $tabledata_atualizadas = array();
 $contagem = 0;
 
 foreach ($avaliacoes_com_competencias as $dados) {
-	if (!isset($selectoptions['modalidades'][$dados->modalidadeid])) {
-		$selectoptions['modalidades'][$dados->modalidadeid] = $dados->modalidade;
+	if (!isset($selectoptions['trimestres'][$dados->trimestre])) {
+		$selectoptions['trimestres'][$dados->trimestre] = $dados->trimestre;
 	}
 
-	if (!isset($selectoptions['escolas'][$dados->modalidadeid][$dados->escolaid])) {
-		$selectoptions['escolas'][$dados->modalidadeid][$dados->escolaid] = $dados->escola;
+	if (!isset($selectoptions['modalidades'][$dados->trimestre][$dados->modalidadeid])) {
+		$selectoptions['modalidades'][$dados->trimestre][$dados->modalidadeid] = $dados->modalidade;
 	}
 
-	if (!isset($selectoptions['programas'][$dados->modalidadeid][$dados->escolaid][$dados->programaid])) {
-		$selectoptions['programas'][$dados->modalidadeid][$dados->escolaid][$dados->programaid] = $dados->programa;
+	if (!isset($selectoptions['escolas'][$dados->trimestre][$dados->modalidadeid][$dados->escolaid])) {
+		$selectoptions['escolas'][$dados->trimestre][$dados->modalidadeid][$dados->escolaid] = $dados->escola;
 	}
 
-	if (!isset($selectoptions['classes'][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid])) {
-		$selectoptions['classes'][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid] = $dados->classe;
+	if (!isset($selectoptions['programas'][$dados->trimestre][$dados->modalidadeid][$dados->escolaid][$dados->programaid])) {
+		$selectoptions['programas'][$dados->trimestre][$dados->modalidadeid][$dados->escolaid][$dados->programaid] = $dados->programa;
 	}
 
-	if (!isset($selectoptions['blocos'][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid])) {
-		$selectoptions['blocos'][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid] = $dados->bloco;
+	if (!isset($selectoptions['classes'][$dados->trimestre][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid])) {
+		$selectoptions['classes'][$dados->trimestre][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid] = $dados->classe;
 	}
 
-	if (!isset($selectoptions['disciplinas'][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid][$dados->disciplinaid])) {
-		$selectoptions['disciplinas'][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid][$dados->disciplinaid] = $dados->disciplina;
+	if (!isset($selectoptions['blocos'][$dados->trimestre][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid])) {
+		$selectoptions['blocos'][$dados->trimestre][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid] = $dados->bloco;
 	}
 
-	if (!isset($selectoptions['avaliacoes'][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid][$dados->disciplinaid][$dados->avaliacaoid])) {
-		$selectoptions['avaliacoes'][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid][$dados->disciplinaid][$dados->avaliacaoid] = $dados->avaliacao;
+	if (!isset($selectoptions['disciplinas'][$dados->trimestre][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid][$dados->disciplinaid])) {
+		$selectoptions['disciplinas'][$dados->trimestre][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid][$dados->disciplinaid] = $dados->disciplina;
 	}
 
-	if (!isset($selectoptions['correcoes'][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid][$dados->disciplinaid][$dados->avaliacaoid][$dados->estudanteid])) {
-		$selectoptions['correcoes'][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid][$dados->disciplinaid][$dados->avaliacaoid][$dados->estudanteid] = $dados->estudante . " (última correção em " . $dados->data_correcao . ")";
+	if (!isset($selectoptions['avaliacoes'][$dados->trimestre][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid][$dados->disciplinaid][$dados->avaliacaoid])) {
+		$selectoptions['avaliacoes'][$dados->trimestre][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid][$dados->disciplinaid][$dados->avaliacaoid] = $dados->avaliacao;
+	}
+
+	if (!isset($selectoptions['correcoes'][$dados->trimestre][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid][$dados->disciplinaid][$dados->avaliacaoid][$dados->estudanteid])) {
+		$selectoptions['correcoes'][$dados->trimestre][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid][$dados->disciplinaid][$dados->avaliacaoid][$dados->estudanteid] = $dados->estudante . " (última correção em " . $dados->data_correcao . ")";
 	}
 
 	$var_tabledata = ($dados->competencias_atualizadas === 'Sim') ? 'tabledata_atualizadas' : 'tabledata_nao_atualizadas';
@@ -211,7 +216,7 @@ foreach ($avaliacoes_com_competencias as $dados) {
 			),
 			html_writer::img(
 				$OUTPUT->pix_url('i/competencies'),
-				get_string('gradeassigncompetencies_submit', 'local_autocompetencygrade')
+				get_string('gradeassigncompetencies_submit', 'local_autocompgrade')
 			)
 		),
 		sizeof(${$var_tabledata}) + 1 . '.',
@@ -223,7 +228,7 @@ foreach ($avaliacoes_com_competencias as $dados) {
 					'action' => 'grading'
 				)
 			),
-			implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
+			implode(' > ', array($dados->trimestre, $dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
 			array(
 				'target' => '_blank'
 			)
@@ -247,7 +252,7 @@ foreach ($avaliacoes_com_competencias as $dados) {
 	);
 
 	if ($atualizar_todas === 1 && $dados->competencias_atualizadas === 'Não' && $contagem < 100) {
-		$result = local_autocompetencygrade\autocompetencygrade::gradeassigncompetencies_printableresult($dados->avaliacaoid, $dados->estudanteid, $dados->disciplinaid);
+		$result = local_autocompgrade\autocompgrade::gradeassigncompetencies_printableresult($dados->avaliacaoid, $dados->estudanteid, $dados->disciplinaid);
 
 		echo $result;
 
@@ -259,36 +264,36 @@ foreach ($avaliacoes_com_competencias as $dados) {
 
 $pageparams['selectoptions'] = $selectoptions;
 
-echo html_writer::tag('h3', get_string('gradeassigncompetencies_instruction', 'local_autocompetencygrade'));
+echo html_writer::tag('h3', get_string('gradeassigncompetencies_instruction', 'local_autocompgrade'));
 
 $mform = new gradeassigncompetencies_form(null, $pageparams);
 
 $mform->display();
 
-echo html_writer::tag('h3', get_string('gradeassigncompetencies_latestgradingsnotupdated', 'local_autocompetencygrade'));
+echo html_writer::tag('h3', get_string('gradeassigncompetencies_latestgradingsnotupdated', 'local_autocompgrade'));
 
 $table = new html_table();
 $table->head = array(
-	get_string('gradeassigncompetencies_submit', 'local_autocompetencygrade'),
+	get_string('gradeassigncompetencies_submit', 'local_autocompgrade'),
 	'#',
 	get_string('pluginname', 'mod_assign'),
-	get_string('gradeassigncompetencies_student', 'local_autocompetencygrade'),
-	get_string('gradeassigncompetencies_gradingdate', 'local_autocompetencygrade'),
+	get_string('gradeassigncompetencies_student', 'local_autocompgrade'),
+	get_string('gradeassigncompetencies_gradingdate', 'local_autocompgrade'),
 	'Competências atualizadas'
 );
 $table->data = $tabledata_nao_atualizadas;
 
 echo html_writer::table($table);
 
-echo html_writer::tag('h3', get_string('gradeassigncompetencies_latestgradingsupdated', 'local_autocompetencygrade'));
+echo html_writer::tag('h3', get_string('gradeassigncompetencies_latestgradingsupdated', 'local_autocompgrade'));
 
 $table = new html_table();
 $table->head = array(
-	get_string('gradeassigncompetencies_submit', 'local_autocompetencygrade'),
+	get_string('gradeassigncompetencies_submit', 'local_autocompgrade'),
 	'#',
 	get_string('pluginname', 'mod_assign'),
-	get_string('gradeassigncompetencies_student', 'local_autocompetencygrade'),
-	get_string('gradeassigncompetencies_gradingdate', 'local_autocompetencygrade'),
+	get_string('gradeassigncompetencies_student', 'local_autocompgrade'),
+	get_string('gradeassigncompetencies_gradingdate', 'local_autocompgrade'),
 	'Competências atualizadas'
 );
 $table->data = $tabledata_atualizadas;

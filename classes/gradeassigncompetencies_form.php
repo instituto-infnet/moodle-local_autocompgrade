@@ -4,7 +4,7 @@
 /**
  * Script for automatic competency grading.
  *
- * @package    local_autocompetencygrade
+ * @package    local_autocompgrade
  * @copyright  2016 Instituto Infnet
 */
 
@@ -19,9 +19,9 @@ class gradeassigncompetencies_form extends moodleform {
 
 		$mform = $this->_form;
 
-		$hier = $mform->addElement('hierselect', 'avaliacoes', get_string('gradeassigncompetencies_selectassigngrading', 'local_autocompetencygrade'));
-		$hier->setOptions(array($selectoptions['modalidades'], $selectoptions['escolas'], $selectoptions['programas'], $selectoptions['classes'], $selectoptions['blocos'], $selectoptions['disciplinas'], $selectoptions['avaliacoes'], $selectoptions['correcoes']));
+		$hier = $mform->addElement('hierselect', 'avaliacoes', get_string('gradeassigncompetencies_selectassigngrading', 'local_autocompgrade'));
+		$hier->setOptions(array($selectoptions['trimestres'], $selectoptions['modalidades'], $selectoptions['escolas'], $selectoptions['programas'], $selectoptions['classes'], $selectoptions['blocos'], $selectoptions['disciplinas'], $selectoptions['avaliacoes'], $selectoptions['correcoes']));
 
-		$this->add_action_buttons(false, get_string('gradeassigncompetencies_submit', 'local_autocompetencygrade'));
+		$this->add_action_buttons(false, get_string('gradeassigncompetencies_submit', 'local_autocompgrade'));
 	}
 }
