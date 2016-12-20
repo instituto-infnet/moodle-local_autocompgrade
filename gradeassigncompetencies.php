@@ -62,10 +62,10 @@ echo $OUTPUT->header() . $OUTPUT->heading(get_string('gradeassigncompetencies', 
 
 $pageparams['avaliacoes'] = $avaliacoes;
 
-if (isset($pageparams['avaliacoes']) && !in_array(0, $pageparams)) {
-	echo local_autocompgrade\autocompgrade::gradeassigncompetencies_printableresult($pageparams['avaliacoes'][$index_avaliacaoid], $pageparams['avaliacoes'][$index_userid], $pageparams['avaliacoes'][$index_courseid]);
+if (isset($pageparams['avaliacoes'])/* && !in_array(0, $pageparams)*/) {
+	echo local_autocompgrade\autocompgrade::gradeassigncompetencies_printableresult($pageparams['avaliacoes'][$index_courseid], $pageparams['avaliacoes'][$index_userid]);
 }
-
+/*
 $avaliacoes_com_competencias = $DB->get_records_sql('
 	select CONCAT(cm.id, "-", usr.id) cmid_usrid,
 		CONCAT(acgc.endyear, "T", acgc.endtrimester) trimestre,
@@ -148,7 +148,7 @@ $avaliacoes_com_competencias = $DB->get_records_sql('
 			where grf.instanceid = gin.id
 		)
 	group by cm.id, usr.id
-	order by competencias_atualizadas, ag.timemodified desc;
+	order by competencias_atualizadas, ag.timemodified desc
 ');
 
 $selectoptions = array();
@@ -228,7 +228,7 @@ foreach ($avaliacoes_com_competencias as $dados) {
 					'action' => 'grading'
 				)
 			),
-			'(' . $dados->trimestre . ') ' . implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
+			implode(' > ', array($dados->trimestre, $dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
 			array(
 				'target' => '_blank'
 			)
@@ -299,5 +299,5 @@ $table->head = array(
 $table->data = $tabledata_atualizadas;
 
 echo html_writer::table($table);
-
+//*/
 echo $OUTPUT->footer();

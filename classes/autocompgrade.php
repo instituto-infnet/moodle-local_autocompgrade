@@ -14,106 +14,233 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once(__DIR__ . '/../../../config.php');
 require_once(__DIR__ . '/../credentials.php');
+require_once(__DIR__ . '/competency_result.php');
 
 class autocompgrade {
-	public static function get_query_string($query_name) {
+	public static function get_query_string($queryname) {
 		$query;
 
-		if ($query_name === 'conceitos_correcao') {
+		if ($queryname === 'avaliacoes_curso_estudante') {
+			// Quantidade de avaliações existentes e corrigidas no curso
 			$query = '
-				select comp.id id_competencia,
-					cm.course,
-					CONCAT_WS(" ", gdr.firstname, gdr.lastname) grader_fullname,
-					case
-						when AVG(case when grl.score > 0 then 1 else 0 end) < 0.5 then 1
-						when AVG(case when grl.score > 0 then 1 else 0 end) < 0.75 then 2
-						when AVG(case when grl.score > 0 then 1 else 0 end) < 1 then 3
-						when AVG(case when grl.score > 0 then 1 else 0 end) = 1 then 4
-					end conceito,
-					usercomp.grade conceito_gravado,
-					comp_fwk.id comp_fwkid,
-					scale.name escala
-				from mdl_course_modules cm
-					join mdl_modules m on m.id = cm.module
-					join mdl_assign asg on asg.id = cm.instance
-					join mdl_context c on cm.id = c.instanceid
-					join mdl_grading_areas ga on c.id = ga.contextid
-					join mdl_grading_definitions gd on ga.id = gd.areaid
-					join mdl_gradingform_rubric_criteria grc on gd.id = grc.definitionid
-					join mdl_grading_instances gin on gin.definitionid = gd.id
-					join mdl_gradingform_rubric_fillings as grf on grf.instanceid = gin.id
-						and grf.criterionid = grc.id
-					join mdl_gradingform_rubric_levels grl on grl.id = grf.levelid
-					join mdl_assign_grades ag on ag.id = gin.itemid
-					join mdl_user usr on usr.id = ag.userid
-					join mdl_user gdr on gdr.id = gin.raterid
-					join mdl_competency_modulecomp as comp_cm on comp_cm.cmid = cm.id
-					join mdl_competency as comp on comp.id = comp_cm.competencyid
-						and comp.idnumber = LEFT(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(grc.description, "[c]", ""), "\n", ""), "\r", ""), "\t", ""), " ", ""), LOCATE(".", REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(grc.description, "[c]", ""), "\n", ""), "\r", ""), "\t", ""), " ", "")) - 1)
-					left join mdl_competency_usercompcourse usercomp on usercomp.userid = ag.userid
-						and usercomp.courseid = cm.course
-						and usercomp.competencyid = comp.id
-					join mdl_competency_framework comp_fwk on comp_fwk.id = comp.competencyframeworkid
-					join mdl_scale scale on scale.id = comp_fwk.scaleid
-				where cm.id = ?
-					and usr.id = ?
-					and m.name = "assign"
-					and gin.status = 1
-					and ag.id = (
-						select ag_maisrecente.id
-						from mdl_assign_grades ag_maisrecente
-						where ag_maisrecente.assignment = ag.assignment
-							and ag_maisrecente.userid = ag.userid
-						order by ag_maisrecente.timemodified desc
-						limit 1
+				select cm.id cmid,
+					m.name module,
+					COUNT(avaliacoes_corrigidas.cmid) graded
+				from {course} c
+					join {course_modules} cm on cm.course = c.id
+					join {modules} m on m.id = cm.module
+					join {context} cx on cx.instanceid = c.id
+						and cx.contextlevel = 50
+					join {role_assignments} ra on ra.contextid = cx.id
+					join {role} r on r.id = ra.roleid
+						and r.shortname = "student"
+					left join (
+						select c.instanceid cmid,
+							ag.userid
+						from {context} c
+							join {grading_areas} ga on ga.contextid = c.id
+							join {grading_definitions} gd on gd.areaid = ga.id
+							join {grading_instances} gin on gin.definitionid = gd.id
+								and gin.status = 1
+							join {assign_grades} ag on ag.id = gin.itemid
+						where exists (
+								select 1
+								from {gradingform_rubric_fillings} grf
+								where grf.instanceid = gin.id
+							)
+
+						union all
+
+						select distinct cm.id cmid,
+							qa.userid
+						from {quiz} as q
+							join {course_modules} as cm on cm.instance = q.id
+							join {quiz_attempts} qa on q.id = qa.quiz
+					) avaliacoes_corrigidas on avaliacoes_corrigidas.cmid = cm.id
+						and avaliacoes_corrigidas.userid = ra.userid
+				where c.id = ?
+					and ra.userid = ?
+					and exists (
+						select 1
+						from {competency_coursecomp} ccomp
+							join {competency} comp on comp.id = ccomp.competencyid
+							join {competency_modulecomp} cmcomp on cmcomp.competencyid = ccomp.competencyid
+						where ccomp.courseid = c.id
+							and cmcomp.cmid = cm.id
 					)
-				group by cm.id, usr.id, comp.id
-				having conceito <> COALESCE(conceito_gravado, 0)
-				order by usr.id, CAST(comp.idnumber as unsigned)
+				group by cm.id
+			';
+		} else if ($queryname === 'activities_items_assign') {
+			// Conceitos por competência para 1 estudante e atividade
+			$query = '
+				select comp.id competencyid,
+					comp_fwk.id fwkid,
+					scale.name scale,
+					GROUP_CONCAT(distinct CONCAT_WS(" ", gdr.firstname, gdr.lastname) order by gdr.firstname, gdr.lastname separator ", ") graders,
+					SUM(case when grl.score > 0 then 1 else 0 end) numgradedright,
+					COUNT(grf.id) numquestions
+				from {course_modules} cm
+					join {modules} m on m.id = cm.module
+						and m.name = "assign"
+					join {assign} asg on asg.id = cm.instance
+					join {context} c on cm.id = c.instanceid
+					join {grading_areas} ga on c.id = ga.contextid
+					join {grading_definitions} gd on ga.id = gd.areaid
+					join {gradingform_rubric_criteria} grc on gd.id = grc.definitionid
+					join {grading_instances} gin on gin.definitionid = gd.id
+						and gin.status = 1
+					join {gradingform_rubric_fillings} as grf on grf.instanceid = gin.id
+						and grf.criterionid = grc.id
+					join {gradingform_rubric_levels} grl on grl.id = grf.levelid
+					join {assign_grades} ag on ag.id = gin.itemid
+						and ag.id = (
+							select ag_maisrecente.id
+							from {assign_grades} ag_maisrecente
+							where ag_maisrecente.assignment = ag.assignment
+								and ag_maisrecente.userid = ag.userid
+							order by ag_maisrecente.timemodified desc
+							limit 1
+						)
+					join {user} usr on usr.id = ag.userid
+					join {user} gdr on gdr.id = gin.raterid
+					join {competency_modulecomp} as comp_cm on comp_cm.cmid = cm.id
+					join {competency} as comp on comp.id = comp_cm.competencyid
+						and comp.idnumber = LEFT(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(grc.description, "[c]", ""), "\n", ""), "\r", ""), "\t", ""), " ", ""), LOCATE(".", REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(grc.description, "[c]", ""), "\n", ""), "\r", ""), "\t", ""), " ", "")) - 1)
+					join {competency_framework} comp_fwk on comp_fwk.id = comp.competencyframeworkid
+					join {scale} scale on scale.id = comp_fwk.scaleid
+				where cm.course = ?
+					and usr.id = ?
+				group by comp.id
+				order by CAST(comp.idnumber as unsigned)
+			';
+		} else if ($queryname === 'activities_items_quiz') {
+			// Conceitos por competência para 1 estudante e atividade
+			$query = '
+				select comp.id competencyid,
+					comp_fwk.id fwkid,
+					scale.name scale,
+					SUM(case when qas.state = "gradedright" or qas.fraction = qatt.maxmark then 1 else 0 end) numgradedright,
+					COUNT(question.id) numquestions
+				from {quiz} as q
+					join {course_modules} as cm on cm.instance = q.id
+					join {local_autocompgrade_courses} acgc on acgc.course = cm.course
+					join {modules} m on m.id = cm.module
+						and m.name = "quiz"
+					join {competency_modulecomp} cmcomp on cmcomp.cmid = cm.id
+					join {competency} comp on comp.id = cmcomp.competencyid
+					join {competency_framework} comp_fwk on comp_fwk.id = comp.competencyframeworkid
+					join {scale} scale on scale.id = comp_fwk.scaleid
+					join {quiz_attempts} qa on qa.quiz = q.id
+						and qa.id = (
+							select sortqa.id
+							from {quiz_attempts} sortqa
+							where sortqa.quiz = q.id
+								and sortqa.userid = qa.userid
+							order by sortqa.timefinish desc
+							limit 1
+						)
+					join {question_usages} as qu on qu.id = qa.uniqueid
+					join {question_attempts} as qatt on qatt.questionusageid = qu.id
+					join {question} as question on question.id = qatt.questionid
+						and LEFT(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(question.name, "[", ""), "\n", ""), "\r", ""), "\t", ""), " ", ""), LOCATE("]", REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(question.name, "[", ""), "\n", ""), "\r", ""), "\t", ""), " ", "")) - 1) = comp.idnumber
+					join {question_attempt_steps} as qas on qas.questionattemptid = qatt.id
+						and qas.id = (
+							select sortqas.id
+							from {question_attempt_steps} sortqas
+							where sortqas.questionattemptid = qatt.id
+							order by sortqas.timecreated desc
+							limit 1
+						)
+				where cm.course = ?
+					and qa.userid = ?
+				group by comp.id
+				order by CAST(comp.idnumber as unsigned)
 			';
 		}
 
 		return $query;
 	}
 
-	public static function gradeassigncompetencies($assign_moduleid, $student_userid, $courseid = null, $no_return = false) {
+	public static function gradeassigncompetencies($courseid, $studentid, $noreturn = false) {
 		global $CFG;
 		global $DB;
 
-		if (!$no_return) {
+		if (!$noreturn) {
 			$return = array(
 				'msg' => '',
 				'params' => array()
 			);
 		}
-		$result = $DB->get_records_sql(self::get_query_string('conceitos_correcao'), array(
-			$assign_moduleid, $student_userid
+
+		$result = $DB->get_records_sql(self::get_query_string('avaliacoes_curso_estudante'), array(
+			$courseid, $studentid
 		));
 
-		if (sizeof($result) > 0) {
-			$params = array(
-				'wstoken' => $CFG->moodle_wstoken,
-				'wsfunction' => 'core_competency_grade_competency_in_course',
-				'courseid' => !is_null($courseid) ? $courseid : array_values($result)[0]->course,
-				'userid' => $student_userid,
-				'note' => 'Competência avaliada automaticamente com base nas rubricas, corrigidas por ' . array_values($result)[0]->grader_fullname . '.'
-			);
-
-			if (array_values($result)[0]->escala !== 'Escala INFNET') {
-				if (!$no_return) {
-					$return['msg'] = 'error_notstandardscale';
-					$return['params']['comp_fwkid'] = array_values($result)[0]->comp_fwkid;
+		$activities = array();
+		foreach ($result as $cmid => $values) {
+			if ($values->graded === '0') {
+				if (!$noreturn) {
+					$return['msg'] = 'error_pendingactivities';
+					$return['params']['cmid'] = $cmid;
 					return $return;
 				} else {
 					return;
 				}
+			} else {
+				$activities[$values->module][] = $cmid;
 			}
+		}
+
+		$competenciesresults = array();
+		foreach ($activities as $module => $cmids) {
+			if (in_array($module, array('assign', 'quiz'))) {
+				$result = $DB->get_records_sql(self::get_query_string('activities_items_' . $module), array(
+					$courseid, $studentid
+				));
+
+				foreach ($result as $competencyid => $values) {
+					if ($values->scale !== 'Escala INFNET') {
+						if (!$noreturn) {
+							$return['msg'] = 'error_notstandardscale';
+							$return['params']['fwkid'] = $values->fwkid;
+							return $return;
+						} else {
+							return;
+						}
+					}
+
+					if (!isset($competenciesresults[$competencyid])) {
+						$competenciesresults[$competencyid] = new competency_result($competencyid);
+					}
+					$competencyresult = $competenciesresults[$competencyid];
+
+					$competencyresult->numquestions += $values->numquestions;
+					$competencyresult->numgradedright += $values->numgradedright;
+
+					if (isset($values->graders)) {
+						$competencyresult->graders = $values->graders;
+					} else if ($competencyresult->hasquiz === false) {
+						$competencyresult->hasquiz = true;
+					}
+				}
+			}
+		}
+
+		//print_object($competenciesresults);
+		if (!empty($competenciesresults)) {
+			$params = array(
+				'wstoken' => $CFG->moodle_wstoken,
+				'wsfunction' => 'core_competency_grade_competency_in_course',
+				'courseid' => $courseid,
+				'userid' => $studentid
+			);
 
 			$mh = curl_multi_init();
 
-			foreach ($result as $row => $values) {
-				$params['competencyid'] = $values->id_competencia;
-				$params['grade'] = $values->conceito;
+			foreach ($competenciesresults as $competencyid => $competencyresult) {
+				$params['competencyid'] = $competencyid;
+				$params['grade'] = $competencyresult->get_grade();
+				$params['note'] = $competencyresult->get_grade_note();
 
 				$ch[$row] = curl_init(
 					$CFG->wwwroot .
@@ -136,7 +263,7 @@ class autocompgrade {
 			foreach(array_keys($ch) as $key) {
 				$curl_error = curl_error($ch[$key]);
 
-				if (!$no_return) {
+				if (!$noreturn) {
 					if($curl_error == "") {
 						$return['results_ch'][] = curl_multi_getcontent($ch[$key]);
 					} else {
@@ -150,7 +277,7 @@ class autocompgrade {
 
 			curl_multi_close($mh);
 		} else {
-			if (!$no_return) {
+			if (!$noreturn) {
 				$return['msg'] = 'error_nogradingrows';
 				return $return;
 			} else {
@@ -158,7 +285,7 @@ class autocompgrade {
 			}
 		}
 
-		if (!$no_return) {
+		if (!$noreturn) {
 			$return['msg'] = 'gradeassigncompetencies_success';
 			return $return;
 		} else {
@@ -166,8 +293,8 @@ class autocompgrade {
 		}
 	}
 
-	public static function gradeassigncompetencies_printableresult($assign_moduleid, $student_userid, $courseid = null) {
-		$result = self::gradeassigncompetencies($assign_moduleid, $student_userid, $courseid);
+	public static function gradeassigncompetencies_printableresult($courseid, $studentid) {
+		$result = self::gradeassigncompetencies($courseid, $studentid);
 
 		$result_content = \html_writer::tag('p', get_string($result['msg'], 'local_autocompgrade'));
 
@@ -179,19 +306,19 @@ class autocompgrade {
 		if ($result['msg'] === 'gradeassigncompetencies_success') {
 			$link_url = '/report/competency/index.php';
 			$link_params['id'] = $courseid;
-			$link_params['user'] = $student_userid;
+			$link_params['user'] = $studentid;
 			$link_string = 'gradeassigncompetencies_linkcompetencybreakdown';
 			$div_class .= ' alert-success';
 		} else if ($result['msg'] === 'error_nogradingrows') {
 			$link_url = '/mod/assign/view.php';
 			$link_params['action'] = 'grader';
-			$link_params['id'] = $assign_moduleid;
-			$link_params['userid'] = $student_userid;
+			$link_params['id'] = $courseid;
+			$link_params['userid'] = $studentid;
 			$link_string = 'gradeassigncompetencies_linkgrader';
 			$div_class .= ' alert-info';
 		} else if ($result['msg'] === 'error_notstandardscale') {
 			$link_url = '/admin/tool/lp/editcompetencyframework.php';
-			$link_params['id'] = $result['params']['comp_fwkid'];
+			$link_params['id'] = $result['params']['fwkid'];
 			$link_params['pagecontextid'] = $context->id;
 			$link_params['return'] = 'competencies';
 			$link_string = 'gradeassigncompetencies_linkcompetencyframework';

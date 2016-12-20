@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="local/autocompgrade/db" VERSION="20161128" COMMENT="XMLDB file for Moodle local/autocompgrade"
+<XMLDB PATH="local/autocompgrade/db" VERSION="20161209" COMMENT="XMLDB file for Moodle local/autocompgrade"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -10,14 +10,12 @@
         <FIELD NAME="course" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Course ID"/>
         <FIELD NAME="endyear" TYPE="int" LENGTH="4" NOTNULL="true" SEQUENCE="false" COMMENT="Year when the course ends so the results can be consolidated"/>
         <FIELD NAME="endtrimester" TYPE="int" LENGTH="1" NOTNULL="true" SEQUENCE="false" COMMENT="Trimester when the course is finished, so the results can be consolidated"/>
-        <FIELD NAME="assigncmid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Assignment containing the rubrics that will define the courses competency grades"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="course" UNIQUE="true" FIELDS="course"/>
-        <INDEX NAME="assigncmid" UNIQUE="true" FIELDS="assigncmid"/>
       </INDEXES>
     </TABLE>
   </TABLES>

@@ -39,5 +39,29 @@ function xmldb_local_autocompgrade_upgrade($oldversion) {
 		upgrade_plugin_savepoint(true, 2016112802, 'local', 'autocompgrade');
 	}
 
+	if ($oldversion < 2016120900) {
+
+		// Define index course (unique) to be dropped form local_autocompgrade_courses.
+		$table = new xmldb_table('local_autocompgrade_courses');
+		$index = new xmldb_index('assigncmid', XMLDB_INDEX_UNIQUE, array('assigncmid'));
+
+		// Conditionally launch drop index course.
+		if ($dbman->index_exists($table, $index)) {
+			$dbman->drop_index($table, $index);
+		}
+
+		// Define field course to be dropped from local_autocompgrade_courses.
+		$field = new xmldb_field('assigncmid');
+
+		// Conditionally launch drop field course.
+		if ($dbman->field_exists($table, $field)) {
+			$dbman->drop_field($table, $field);
+		}
+
+		// Autocompgrade savepoint reached.
+		upgrade_plugin_savepoint(true, 2016120900, 'local', 'autocompgrade');
+	}
+
+
 	return true;
 }
