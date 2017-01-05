@@ -15,33 +15,26 @@ require_once($CFG->libdir . '/adminlib.php');
 
 global $DB;
 
-$avaliacoes = optional_param('avaliacoes', null, PARAM_RAW);
+$courses = optional_param('disciplinas', null, PARAM_RAW);
 $pageparams = array(
 	'course' => optional_param('course', null, PARAM_INT),
-	'cmid' => optional_param('cmid', null, PARAM_INT),
 	'userid' => optional_param('userid', null, PARAM_INT),
 );
 $atualizar_todas = optional_param('atualizar_todas', null, PARAM_BOOL);
 
-$index_courseid = 6;
-$index_avaliacaoid = 7;
-$index_userid = 8;
+$indexcourseid = 5;
+$indexuserid = 6;
 
-if (isset($avaliacoes)) {
-	$pageparams['course'] = $avaliacoes[$index_courseid];
-	$pageparams['cmid'] = $avaliacoes[$index_avaliacaoid];
-	$pageparams['userid'] = $avaliacoes[$index_userid];
-} else if (isset($pageparams['cmid']) || isset($pageparams['userid'])) {
+if (isset($courses)) {
+	$pageparams['course'] = $courses[$indexcourseid];
+	$pageparams['userid'] = $courses[$indexuserid];
+} else if (isset($pageparams['course']) || isset($pageparams['userid'])) {
 	if (isset($pageparams['course'])) {
-		$avaliacoes[$index_courseid] = $pageparams['course'];
-	}
-
-	if (isset($pageparams['cmid'])) {
-		$avaliacoes[$index_avaliacaoid] = $pageparams['cmid'];
+		$courses[$indexcourseid] = $pageparams['course'];
 	}
 
 	if (isset($pageparams['userid'])) {
-		$avaliacoes[$index_userid] = $pageparams['userid'];
+		$courses[$indexuserid] = $pageparams['userid'];
 	}
 }
 
@@ -60,157 +53,209 @@ require_capability('moodle/competency:competencymanage', $context);
 
 echo $OUTPUT->header() . $OUTPUT->heading(get_string('gradeassigncompetencies', 'local_autocompgrade'));
 
-$pageparams['avaliacoes'] = $avaliacoes;
+$pageparams['disciplinas'] = $courses;
 
-if (isset($pageparams['avaliacoes'])/* && !in_array(0, $pageparams)*/) {
-	echo local_autocompgrade\autocompgrade::gradeassigncompetencies_printableresult($pageparams['avaliacoes'][$index_courseid], $pageparams['avaliacoes'][$index_userid]);
+if (isset($pageparams['disciplinas']) && !in_array(0, $pageparams)) {
+	echo local_autocompgrade\autocompgrade::gradeassigncompetencies_printableresult($pageparams['disciplinas'][$indexcourseid], $pageparams['disciplinas'][$indexuserid]);
 }
-/*
-$avaliacoes_com_competencias = $DB->get_records_sql('
-	select CONCAT(cm.id, "-", usr.id) cmid_usrid,
-		CONCAT(acgc.endyear, "T", acgc.endtrimester) trimestre,
-		modalidade.id modalidadeid,
-		modalidade.name modalidade,
-		escola.id escolaid,
-		escola.name escola,
-		programa.id programaid,
-		programa.name programa,
-		classe.id classeid,
-		classe.name classe,
-		bloco.id blocoid,
-		bloco.name bloco,
-		disciplina.id disciplinaid,
-		disciplina.fullname disciplina,
-		cm.id avaliacaoid,
-		asg.name avaliacao,
-		usr.id estudanteid,
-		CONCAT(usr.firstname, " ", usr.lastname) estudante,
-		DATE_FORMAT(FROM_UNIXTIME(ag.timemodified), "%d/%m/%Y às %H:%i:%s") data_correcao,
-		(
-			select case when usercomp.grade is null or usercomp.grade <>
-				case
-					when AVG(case when grl.score > 0 then 1 else 0 end) < 0.5 then 1
-					when AVG(case when grl.score > 0 then 1 else 0 end) < 0.75 then 2
-					when AVG(case when grl.score > 0 then 1 else 0 end) < 1 then 3
-					when AVG(case when grl.score > 0 then 1 else 0 end) = 1 then 4
-				end
-				then "Não"
-				else "Sim"
-			end
-			from mdl_gradingform_rubric_fillings grf
-			join mdl_gradingform_rubric_criteria grc on grc.id = grf.criterionid
-			join mdl_gradingform_rubric_levels grl on grl.criterionid = grc.id
-					  and grf.levelid = grl.id
-			join mdl_competency as comp on comp.idnumber = LEFT(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(grc.description, "[c]", ""), "\n", ""), "\r", ""), "\t", ""), " ", ""), LOCATE(".", REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(grc.description, "[c]", ""), "\n", ""), "\r", ""), "\t", ""), " ", "")) - 1)
-			left join mdl_competency_usercompcourse usercomp on usercomp.competencyid = comp.id
-			where grf.instanceid = gin.id
-				and comp.id = cmcomp.competencyid
-				and usercomp.courseid = cm.course
-				and usercomp.userid = usr.id
-		) competencias_atualizadas
-	from mdl_local_autocompgrade_courses acgc
-		join mdl_course_modules cm on cm.id = acgc.assigncmid
-		join mdl_modules m on m.id = cm.module
-		join mdl_assign asg on asg.id = cm.instance
-		join mdl_course_sections cs on cs.id = cm.section
-		join mdl_course disciplina on disciplina.id = cm.course
-		join mdl_course_categories bloco on bloco.id = disciplina.category
-		join mdl_course_categories classe on classe.id = bloco.parent
-		join mdl_course_categories programa on programa.id = classe.parent
-		join mdl_course_categories escola on escola.id = programa.parent
-		join mdl_course_categories modalidade on modalidade.id = escola.parent
-		join mdl_competency_modulecomp cmcomp on cmcomp.cmid = cm.id
-		join mdl_context c on c.instanceid = cm.id
-		join mdl_grading_areas ga on ga.contextid = c.id
-		join mdl_grading_definitions gd on gd.areaid = ga.id
-		join mdl_grading_instances gin on gin.definitionid = gd.id
-		join mdl_assign_grades ag on ag.id = gin.itemid
-		join mdl_context ctx on ctx.instanceid = cm.course
-			and ctx.contextlevel = 50
-		join mdl_role_assignments ra on ra.contextid = ctx.id
-		join mdl_role r on r.id = ra.roleid
-			and r.shortname = "student"
-		join mdl_user usr on usr.id = ag.userid
-			and usr.id = ra.userid
-	where m.name = "assign"
-		and gin.status = 1
-		and ag.id = (
-			select ag_maisrecente.id
-			from mdl_assign_grades ag_maisrecente
-			where ag_maisrecente.assignment = asg.id
-				and ag_maisrecente.userid = ag.userid
-			order by ag_maisrecente.timemodified desc
-			limit 1
-		)
-		and exists (
-			select 1
-			from mdl_gradingform_rubric_fillings grf
-			where grf.instanceid = gin.id
-		)
-	group by cm.id, usr.id
-	order by competencias_atualizadas, ag.timemodified desc
+$courses = $DB->get_records_sql('
+	select CONCAT(disciplinas.disciplinaid, "-", disciplinas.estudanteid) course_usrid,
+		CONCAT(disciplinas.endyear, "T", disciplinas.endtrimester) trimestre,
+		disciplinas.escolaid,
+		disciplinas.escola,
+		disciplinas.programaid,
+		disciplinas.programa,
+		disciplinas.classeid,
+		disciplinas.classe,
+		disciplinas.blocoid,
+		disciplinas.bloco,
+		disciplinas.disciplinaid,
+		disciplinas.disciplina,
+		disciplinas.estudanteid,
+		CONCAT(disciplinas.firstname, " ", disciplinas.lastname) estudante,
+		MIN(competencia_atualizada) competenciasatualizadas
+	from (
+		select
+			disciplina.id disciplinaid,
+			usr.id estudanteid,
+			acgc.endyear,
+			acgc.endtrimester,
+			escola.id escolaid,
+			escola.name escola,
+			programa.id programaid,
+			programa.name programa,
+			classe.id classeid,
+			classe.name classe,
+			bloco.id blocoid,
+			bloco.name bloco,
+			disciplina.fullname disciplina,
+			usr.firstname,
+			usr.lastname,
+			ccomp.competencyid,
+			(
+				select
+					case
+						when (AVG(resultados.grau) is not null and usercomp.grade is null)
+							or usercomp.grade <>
+								case
+									when AVG(resultados.grau) < 0.5 then 1
+									when AVG(resultados.grau) < 0.75 then 2
+									when AVG(resultados.grau) < 1 then 3
+									when AVG(resultados.grau) = 1 then 4
+								end
+							then "Não"
+							else "Sim"
+					end competencia_atualizada
+				from (
+					(
+						select cm.course,
+							ag.userid,
+							ag.timemodified,
+							comp.id competencyid,
+							case when grl.score > 0 then 1 else 0 end grau
+						from {local_autocompgrade_courses} acgc
+							join {course_modules} cm on cm.course = acgc.course
+							join {competency_modulecomp} cmcomp on cmcomp.cmid = cm.id
+							join {competency} comp on comp.id = cmcomp.competencyid
+							join {modules} m on m.id = cm.module
+								and m.name = "assign"
+							join {context} c on c.instanceid = cm.id
+							join {grading_areas} ga on ga.contextid = c.id
+							join {grading_definitions} gd on gd.areaid = ga.id
+							join {grading_instances} gin on gin.definitionid = gd.id
+								and gin.status = 1
+							join {assign_grades} ag on ag.id = gin.itemid
+							join {assign} asg on asg.id = ag.assignment
+							join {gradingform_rubric_fillings} grf on grf.instanceid = gin.id
+							join {gradingform_rubric_criteria} grc on grc.id = grf.criterionid
+								and LEFT(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(grc.description, "[c]", ""), "\n", ""), "\r", ""), "\t", ""), " ", ""), LOCATE(".", REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(grc.description, "[c]", ""), "\n", ""), "\r", ""), "\t", ""), " ", "")) - 1) = comp.idnumber
+							join {gradingform_rubric_levels} grl on grl.criterionid = grc.id
+							  and grf.levelid = grl.id
+						where ag.id = (
+							select ag_maisrecente.id
+							from {assign_grades} ag_maisrecente
+							where ag_maisrecente.assignment = asg.id
+								and ag_maisrecente.userid = ag.userid
+							order by ag_maisrecente.timemodified desc
+							limit 1
+						)
+
+						union all
+
+						select cm.course,
+							u.id userid,
+							qa.timemodified,
+							comp.id competencyid,
+							case
+								when qas.state = "gradedright" or qas.fraction = qatt.maxmark then 1
+								else 0
+							end grau
+						from {quiz} as q
+							join {course_modules} as cm on cm.instance = q.id
+							join {local_autocompgrade_courses} acgc on acgc.course = cm.course
+							join {modules} m on m.id = cm.module
+								and m.name = "quiz"
+							join {competency_modulecomp} cmcomp on cmcomp.cmid = cm.id
+							join {competency} comp on comp.id = cmcomp.competencyid
+							join {quiz_attempts} qa on q.id = qa.quiz
+							join {question_usages} as qu on qu.id = qa.uniqueid
+							join {user} as u on u.id = qa.userid
+							join {question_attempts} as qatt on qatt.questionusageid = qu.id
+							join {question} as question on question.id = qatt.questionid
+								and LEFT(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(question.name, "[", ""), "\n", ""), "\r", ""), "\t", ""), " ", ""), LOCATE("]", REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(question.name, "[", ""), "\n", ""), "\r", ""), "\t", ""), " ", "")) - 1) = comp.idnumber
+							join {question_attempt_steps} as qas on qas.questionattemptid = qatt.id
+								and qas.id = (
+									select sortqas.id
+									from {question_attempt_steps} sortqas
+									where sortqas.questionattemptid = qatt.id
+									order by sortqas.timecreated desc
+									limit 1
+								)
+					) resultados
+				)
+					left join {competency_usercompcourse} usercomp on usercomp.competencyid = resultados.competencyid
+						and usercomp.userid = resultados.userid
+				where resultados.course = acgc.course
+					and resultados.userid = usr.id
+					and resultados.competencyid = ccomp.competencyid
+			) competencia_atualizada
+		from {local_autocompgrade_courses} acgc
+			join {course} disciplina on disciplina.id = acgc.course
+			join {course_categories} bloco on bloco.id = disciplina.category
+			join {course_categories} classe on classe.id = bloco.parent
+			join {course_categories} programa on programa.id = classe.parent
+			join {course_categories} escola on escola.id = programa.parent
+			join {competency_coursecomp} ccomp on ccomp.courseid = acgc.course
+			join {context} ctx on ctx.instanceid = acgc.course
+				and ctx.contextlevel = 50
+			join {role_assignments} ra on ra.contextid = ctx.id
+			join {role} r on r.id = ra.roleid
+				and r.shortname = "student"
+			join {user} usr on usr.id = ra.userid
+		group by acgc.course,
+			usr.id,
+			ccomp.competencyid
+	) disciplinas
+	group by disciplinas.disciplinaid,
+		disciplinas.estudanteid
+	order by trimestre,
+		disciplinas.escola,
+		disciplinas.programa,
+		disciplinas.classe,
+		disciplinas.bloco,
+		disciplinas.disciplina,
+		estudante
 ');
 
 $selectoptions = array();
 $selectoptions['trimestres'] = array();
-$selectoptions['modalidades'] = array();
 $selectoptions['escolas'] = array();
 $selectoptions['programas'] = array();
 $selectoptions['classes'] = array();
 $selectoptions['blocos'] = array();
 $selectoptions['disciplinas'] = array();
-$selectoptions['avaliacoes'] = array();
-$selectoptions['correcoes'] = array();
+$selectoptions['estudantes'] = array();
 
-$tabledata_nao_atualizadas = array();
-$tabledata_atualizadas = array();
+$tabledatadesatualizadas = array();
+$tabledataatualizadas = array();
 $contagem = 0;
 
-foreach ($avaliacoes_com_competencias as $dados) {
+foreach ($courses as $dados) {
 	if (!isset($selectoptions['trimestres'][$dados->trimestre])) {
 		$selectoptions['trimestres'][$dados->trimestre] = $dados->trimestre;
 	}
 
-	if (!isset($selectoptions['modalidades'][$dados->trimestre][$dados->modalidadeid])) {
-		$selectoptions['modalidades'][$dados->trimestre][$dados->modalidadeid] = $dados->modalidade;
+	if (!isset($selectoptions['escolas'][$dados->trimestre][$dados->escolaid])) {
+		$selectoptions['escolas'][$dados->trimestre][$dados->escolaid] = $dados->escola;
 	}
 
-	if (!isset($selectoptions['escolas'][$dados->trimestre][$dados->modalidadeid][$dados->escolaid])) {
-		$selectoptions['escolas'][$dados->trimestre][$dados->modalidadeid][$dados->escolaid] = $dados->escola;
+	if (!isset($selectoptions['programas'][$dados->trimestre][$dados->escolaid][$dados->programaid])) {
+		$selectoptions['programas'][$dados->trimestre][$dados->escolaid][$dados->programaid] = $dados->programa;
 	}
 
-	if (!isset($selectoptions['programas'][$dados->trimestre][$dados->modalidadeid][$dados->escolaid][$dados->programaid])) {
-		$selectoptions['programas'][$dados->trimestre][$dados->modalidadeid][$dados->escolaid][$dados->programaid] = $dados->programa;
+	if (!isset($selectoptions['classes'][$dados->trimestre][$dados->escolaid][$dados->programaid][$dados->classeid])) {
+		$selectoptions['classes'][$dados->trimestre][$dados->escolaid][$dados->programaid][$dados->classeid] = $dados->classe;
 	}
 
-	if (!isset($selectoptions['classes'][$dados->trimestre][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid])) {
-		$selectoptions['classes'][$dados->trimestre][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid] = $dados->classe;
+	if (!isset($selectoptions['blocos'][$dados->trimestre][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid])) {
+		$selectoptions['blocos'][$dados->trimestre][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid] = $dados->bloco;
 	}
 
-	if (!isset($selectoptions['blocos'][$dados->trimestre][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid])) {
-		$selectoptions['blocos'][$dados->trimestre][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid] = $dados->bloco;
+	if (!isset($selectoptions['disciplinas'][$dados->trimestre][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid][$dados->disciplinaid])) {
+		$selectoptions['disciplinas'][$dados->trimestre][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid][$dados->disciplinaid] = $dados->disciplina;
 	}
 
-	if (!isset($selectoptions['disciplinas'][$dados->trimestre][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid][$dados->disciplinaid])) {
-		$selectoptions['disciplinas'][$dados->trimestre][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid][$dados->disciplinaid] = $dados->disciplina;
+	if (!isset($selectoptions['estudantes'][$dados->trimestre][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid][$dados->disciplinaid][$dados->estudanteid])) {
+		$selectoptions['estudantes'][$dados->trimestre][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid][$dados->disciplinaid][$dados->estudanteid] = $dados->estudante;
 	}
 
-	if (!isset($selectoptions['avaliacoes'][$dados->trimestre][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid][$dados->disciplinaid][$dados->avaliacaoid])) {
-		$selectoptions['avaliacoes'][$dados->trimestre][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid][$dados->disciplinaid][$dados->avaliacaoid] = $dados->avaliacao;
-	}
-
-	if (!isset($selectoptions['correcoes'][$dados->trimestre][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid][$dados->disciplinaid][$dados->avaliacaoid][$dados->estudanteid])) {
-		$selectoptions['correcoes'][$dados->trimestre][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid][$dados->disciplinaid][$dados->avaliacaoid][$dados->estudanteid] = $dados->estudante . " (última correção em " . $dados->data_correcao . ")";
-	}
-
-	$var_tabledata = ($dados->competencias_atualizadas === 'Sim') ? 'tabledata_atualizadas' : 'tabledata_nao_atualizadas';
+	$var_tabledata = ($dados->competenciasatualizadas === 'Sim') ? 'tabledataatualizadas' : 'tabledatadesatualizadas';
 	${$var_tabledata}[] = array(
 		html_writer::link(
 			new moodle_url(
 				$url,
 				array(
 					'course' => $dados->disciplinaid,
-					'cmid' => $dados->avaliacaoid,
 					'userid' => $dados->estudanteid
 				)
 			),
@@ -222,24 +267,22 @@ foreach ($avaliacoes_com_competencias as $dados) {
 		sizeof(${$var_tabledata}) + 1 . '.',
 		html_writer::link(
 			new moodle_url(
-				'/mod/assign/view.php',
+				'/course/view.php',
 				array(
-					'id' => $dados->avaliacaoid,
-					'action' => 'grading'
+					'id' => $dados->disciplinaid
 				)
 			),
-			implode(' > ', array($dados->trimestre, $dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
+			implode(' > ', array($dados->trimestre,  $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina)),
 			array(
 				'target' => '_blank'
 			)
 		),
 		html_writer::link(
 			new moodle_url(
-				'/mod/assign/view.php',
+				'/report/competency/index.php',
 				array(
-					'id' => $dados->avaliacaoid,
-					'action' => 'grader',
-					'userid' => $dados->estudanteid
+					'id' => $dados->disciplinaid,
+					'user' => $dados->estudanteid
 				)
 			),
 			$dados->estudante,
@@ -247,12 +290,11 @@ foreach ($avaliacoes_com_competencias as $dados) {
 				'target' => '_blank'
 			)
 		),
-		$dados->data_correcao,
-		$dados->competencias_atualizadas
+		$dados->competenciasatualizadas
 	);
 
-	if ($atualizar_todas === 1 && $dados->competencias_atualizadas === 'Não' && $contagem < 100) {
-		$result = local_autocompgrade\autocompgrade::gradeassigncompetencies_printableresult($dados->avaliacaoid, $dados->estudanteid, $dados->disciplinaid);
+	if ($atualizar_todas === 1 && $dados->competenciasatualizadas === 'Não' && $contagem < 100) {
+		$result = local_autocompgrade\autocompgrade::gradeassigncompetencies_printableresult($dados->disciplinaid, $dados->estudanteid);
 
 		echo $result;
 
@@ -270,34 +312,28 @@ $mform = new gradeassigncompetencies_form(null, $pageparams);
 
 $mform->display();
 
-echo html_writer::tag('h3', get_string('gradeassigncompetencies_latestgradingsnotupdated', 'local_autocompgrade'));
-
-$table = new html_table();
-$table->head = array(
+$tablehead = array(
 	get_string('gradeassigncompetencies_submit', 'local_autocompgrade'),
 	'#',
-	get_string('pluginname', 'mod_assign'),
+	get_string('course', 'local_autocompgrade'),
 	get_string('gradeassigncompetencies_student', 'local_autocompgrade'),
-	get_string('gradeassigncompetencies_gradingdate', 'local_autocompgrade'),
-	'Competências atualizadas'
+	get_string('gradeassigncompetencies_updatedgradesheader', 'local_autocompgrade')
 );
-$table->data = $tabledata_nao_atualizadas;
+
+echo html_writer::tag('h3', get_string('gradeassigncompetencies_notupdatedgrades', 'local_autocompgrade'));
+
+$table = new html_table();
+$table->head = $tablehead;
+$table->data = $tabledatadesatualizadas;
 
 echo html_writer::table($table);
 
-echo html_writer::tag('h3', get_string('gradeassigncompetencies_latestgradingsupdated', 'local_autocompgrade'));
+echo html_writer::tag('h3', get_string('gradeassigncompetencies_updatedgrades', 'local_autocompgrade'));
 
 $table = new html_table();
-$table->head = array(
-	get_string('gradeassigncompetencies_submit', 'local_autocompgrade'),
-	'#',
-	get_string('pluginname', 'mod_assign'),
-	get_string('gradeassigncompetencies_student', 'local_autocompgrade'),
-	get_string('gradeassigncompetencies_gradingdate', 'local_autocompgrade'),
-	'Competências atualizadas'
-);
-$table->data = $tabledata_atualizadas;
+$table->head = $tablehead;
+$table->data = $tabledataatualizadas;
 
 echo html_writer::table($table);
-//*/
+
 echo $OUTPUT->footer();

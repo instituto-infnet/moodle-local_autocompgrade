@@ -17,12 +17,13 @@ global $DB;
 
 $bloco = optional_param('bloco', null, PARAM_RAW);
 $pageparams = array(
-	'trimestre' => optional_param('trimestre', null, PARAM_ALPHANUM)
+	'trimestre' => optional_param('trimestre', null, PARAM_ALPHANUM),
+	'bloco' => optional_param('bloco', null, PARAM_INT)
 );
 
 if (isset($bloco)) {
 	$pageparams['trimestre'] = $bloco[0];
-	$pageparams['bloco'] = $bloco[5];
+	$pageparams['bloco'] = $bloco[4];
 }
 
 $url = '/local/autocompgrade/consistencycheck.php';
@@ -39,14 +40,12 @@ require_login();
 require_capability('moodle/competency:competencymanage', $context);
 
 echo $OUTPUT->header() . $OUTPUT->heading(get_string('consistencycheck', 'local_autocompgrade'));
-/*
+
 $blocos = $DB->get_records_sql('
 	select
 		CONCAT(acgc.endyear, "T", acgc.endtrimester, "-", bloco.id) trimestrebloco,
 		CONCAT(acgc.endyear, "T", acgc.endtrimester) trimestreid,
 		CONCAT(acgc.endyear, "T", acgc.endtrimester) trimestre,
-		modalidade.id modalidadeid,
-		modalidade.name modalidade,
 		escola.id escolaid,
 		escola.name escola,
 		programa.id programaid,
@@ -55,21 +54,18 @@ $blocos = $DB->get_records_sql('
 		classe.name classe,
 		bloco.id blocoid,
 		bloco.name bloco
-	from mdl_local_autocompgrade_courses acgc
-		join mdl_course disciplina on disciplina.id = acgc.course
-		join mdl_course_categories bloco on bloco.id = disciplina.category
-		join mdl_course_categories classe on classe.id = bloco.parent
-		join mdl_course_categories programa on programa.id = classe.parent
-		join mdl_course_categories escola on escola.id = programa.parent
-		join mdl_course_categories modalidade on modalidade.id = escola.parent
+	from {local_autocompgrade_courses} acgc
+		join {course} disciplina on disciplina.id = acgc.course
+		join {course_categories} bloco on bloco.id = disciplina.category
+		join {course_categories} classe on classe.id = bloco.parent
+		join {course_categories} programa on programa.id = classe.parent
+		join {course_categories} escola on escola.id = programa.parent
 	group by trimestre, bloco.id
 	union all
 	select distinct
 		CONCAT(acgc.endyear, "T", acgc.endtrimester, "-0") trimestrebloco,
 		CONCAT(acgc.endyear, "T", acgc.endtrimester) trimestreid,
 		CONCAT(acgc.endyear, "T", acgc.endtrimester) trimestre,
-		0 modalidadeid,
-		"(Todas as modalidades)" modalidade,
 		0 escolaid,
 		"(Todas as escolas)" escola,
 		0 programaid,
@@ -78,13 +74,11 @@ $blocos = $DB->get_records_sql('
 		"(Todas as classes)" classe,
 		0 blocoid,
 		"(Todos os blocos)" bloco
-	from mdl_local_autocompgrade_courses acgc
+	from {local_autocompgrade_courses} acgc
 	union all
 	select "0-0" trimestrebloco,
 		0 trimestreid,
 		"(Todos os trimestres)" trimestre,
-		0 modalidadeid,
-		"(Todas as modalidades)" modalidade,
 		0 escolaid,
 		"(Todas as escolas)" escola,
 		0 programaid,
@@ -94,7 +88,6 @@ $blocos = $DB->get_records_sql('
 		0 blocoid,
 		"(Todos os blocos)" bloco
 	order by trimestre,
-		modalidade,
 		escola,
 		programa,
 		classe,
@@ -106,24 +99,20 @@ foreach ($blocos as $dados) {
 		$selectoptions['trimestres'][$dados->trimestreid] = $dados->trimestre;
 	}
 
-	if (!isset($selectoptions['modalidades'][$dados->trimestreid][$dados->modalidadeid])) {
-		$selectoptions['modalidades'][$dados->trimestreid][$dados->modalidadeid] = $dados->modalidade;
+	if (!isset($selectoptions['escolas'][$dados->trimestreid][$dados->escolaid])) {
+		$selectoptions['escolas'][$dados->trimestreid][$dados->escolaid] = $dados->escola;
 	}
 
-	if (!isset($selectoptions['escolas'][$dados->trimestreid][$dados->modalidadeid][$dados->escolaid])) {
-		$selectoptions['escolas'][$dados->trimestreid][$dados->modalidadeid][$dados->escolaid] = $dados->escola;
+	if (!isset($selectoptions['programas'][$dados->trimestreid][$dados->escolaid][$dados->programaid])) {
+		$selectoptions['programas'][$dados->trimestreid][$dados->escolaid][$dados->programaid] = $dados->programa;
 	}
 
-	if (!isset($selectoptions['programas'][$dados->trimestreid][$dados->modalidadeid][$dados->escolaid][$dados->programaid])) {
-		$selectoptions['programas'][$dados->trimestreid][$dados->modalidadeid][$dados->escolaid][$dados->programaid] = $dados->programa;
+	if (!isset($selectoptions['classes'][$dados->trimestreid][$dados->escolaid][$dados->programaid][$dados->classeid])) {
+		$selectoptions['classes'][$dados->trimestreid][$dados->escolaid][$dados->programaid][$dados->classeid] = $dados->classe;
 	}
 
-	if (!isset($selectoptions['classes'][$dados->trimestreid][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid])) {
-		$selectoptions['classes'][$dados->trimestreid][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid] = $dados->classe;
-	}
-
-	if (!isset($selectoptions['blocos'][$dados->trimestreid][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid])) {
-		$selectoptions['blocos'][$dados->trimestreid][$dados->modalidadeid][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid] = $dados->bloco;
+	if (!isset($selectoptions['blocos'][$dados->trimestreid][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid])) {
+		$selectoptions['blocos'][$dados->trimestreid][$dados->escolaid][$dados->programaid][$dados->classeid][$dados->blocoid] = $dados->bloco;
 	}
 }
 
@@ -140,7 +129,6 @@ $consulta = $DB->get_records_sql('
 		disciplina.id course,
 		compfwk.id frameworkid,
 		CONCAT(acgc.endyear, "T", acgc.endtrimester) trimestre,
-		modalidade.name modalidade,
 		escola.name escola,
 		programa.name programa,
 		classe.name classe,
@@ -151,49 +139,46 @@ $consulta = $DB->get_records_sql('
 		COUNT(distinct comptpl.templateid) templates,
 		COUNT(distinct crscomp.id) competencias_curso,
 		COUNT(distinct cmcomp.competencyid) competencias_modulo
-	from mdl_local_autocompgrade_courses acgc
-		join mdl_course disciplina on disciplina.id = acgc.course
-		join mdl_course_categories bloco on bloco.id = disciplina.category
-		join mdl_course_categories classe on classe.id = bloco.parent
-		join mdl_course_categories programa on programa.id = classe.parent
-		join mdl_course_categories escola on escola.id = programa.parent
-		join mdl_course_categories modalidade on modalidade.id = escola.parent
-		left join mdl_competency_coursecomp crscomp on crscomp.courseid = disciplina.id
-		left join mdl_competency comp on comp.id = crscomp.competencyid
-		left join mdl_competency_framework compfwk on compfwk.id = comp.competencyframeworkid
-		left join mdl_competency comps_fwk on comps_fwk.competencyframeworkid = compfwk.id
-		left join mdl_scale scale on scale.id = compfwk.scaleid
-		left join mdl_competency_templatecomp comptpl on comptpl.competencyid = comp.id
+	from {local_autocompgrade_courses} acgc
+		join {course} disciplina on disciplina.id = acgc.course
+		join {course_categories} bloco on bloco.id = disciplina.category
+		join {course_categories} classe on classe.id = bloco.parent
+		join {course_categories} programa on programa.id = classe.parent
+		join {course_categories} escola on escola.id = programa.parent
+		left join {competency_coursecomp} crscomp on crscomp.courseid = disciplina.id
+		left join {competency} comp on comp.id = crscomp.competencyid
+		left join {competency_framework} compfwk on compfwk.id = comp.competencyframeworkid
+		left join {competency} comps_fwk on comps_fwk.competencyframeworkid = compfwk.id
+		left join {scale} scale on scale.id = compfwk.scaleid
+		left join {competency_templatecomp} comptpl on comptpl.competencyid = comp.id
 		left join (
-			select cm.id cmid,
-				cm.course course,
+			select cm.course course,
 				cmcomp.competencyid
-			from mdl_competency_modulecomp cmcomp
-				join mdl_course_modules cm on cm.id = cmcomp.cmid
+			from {competency_modulecomp} cmcomp
+				join {course_modules} cm on cm.id = cmcomp.cmid
 		) cmcomp on cmcomp.competencyid = comp.id
 			and cmcomp.course = disciplina.id
-	where COALESCE(?, CONCAT(acgc.endyear, "T", acgc.endtrimester)) in (?, CONCAT(acgc.endyear, "T", acgc.endtrimester))
-		and COALESCE(0, bloco.id) in (0, bloco.id)
+	where COALESCE(?, CONCAT(acgc.endyear, "T", acgc.endtrimester)) in (0, CONCAT(acgc.endyear, "T", acgc.endtrimester))
+		and COALESCE(?, bloco.id) in (0, bloco.id)
 	group by disciplina.id
-	order by modalidade,
-		escola,
+	order by escola,
 		programa,
 		classe,
 		bloco,
 		disciplina
 ', array($pageparams['trimestre'], $pageparams['bloco']));
 
-$frameworks_escala_incorreta = array();
-$cursos_faltando_competencias = array();
-$avaliacoes_faltando_competencias = array();
-$frameworks_sem_template = array();
+$frameworkswithwrongscale = array();
+$coursesmissingcompetencies = array();
+$activitiesmissingcompetencies = array();
+$frameworkswithouttemplates = array();
 
 foreach ($consulta as $course => $dados) {
 	$frameworkid = $dados->frameworkid;
 
 	if ($frameworkid && $dados->escala !== 'Escala INFNET') {
-		$frameworks_escala_incorreta[] = array(
-			sizeof($frameworks_escala_incorreta) + 1 . '.',
+		$frameworkswithwrongscale[] = array(
+			sizeof($frameworkswithwrongscale) + 1 . '.',
 			html_writer::link(
 				new moodle_url(
 					'/admin/tool/lp/editcompetencyframework.php',
@@ -203,7 +188,7 @@ foreach ($consulta as $course => $dados) {
 						'return' => 'competencies'
 					)
 				),
-				'(' . $dados->trimestre . ') ' . implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina)),
+				'(' . $dados->trimestre . ') ' . implode(' > ', array($dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina)),
 				array(
 					'target' => '_blank'
 				)
@@ -213,8 +198,8 @@ foreach ($consulta as $course => $dados) {
 	}
 
 	if ($dados->competencias_curso === '0' || $dados->competencias_curso < $dados->competencias_fwk) {
-		$cursos_faltando_competencias[] = array(
-			sizeof($cursos_faltando_competencias) + 1 . '.',
+		$coursesmissingcompetencies[] = array(
+			sizeof($coursesmissingcompetencies) + 1 . '.',
 			html_writer::link(
 				new moodle_url(
 					'/admin/tool/lp/coursecompetencies.php',
@@ -222,7 +207,7 @@ foreach ($consulta as $course => $dados) {
 						'courseid' => $course
 					)
 				),
-				'(' . $dados->trimestre . ') ' . implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina)),
+				'(' . $dados->trimestre . ') ' . implode(' > ', array($dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina)),
 				array(
 					'target' => '_blank'
 				)
@@ -232,16 +217,16 @@ foreach ($consulta as $course => $dados) {
 	}
 
 	if ($dados->competencias_modulo < $dados->competencias_fwk) {
-		$avaliacoes_faltando_competencias[] = array(
-			sizeof($avaliacoes_faltando_competencias) + 1 . '.',
+		$activitiesmissingcompetencies[] = array(
+			sizeof($activitiesmissingcompetencies) + 1 . '.',
 			html_writer::link(
 				new moodle_url(
-					'/course/view.php#section-10',
+					'/course/view.php',
 					array(
 						'id' => $course
 					)
 				),
-				'(' . $dados->trimestre . ') ' . implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina)),
+				'(' . $dados->trimestre . ') ' . implode(' > ', array($dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina)),
 				array(
 					'target' => '_blank'
 				)
@@ -251,8 +236,8 @@ foreach ($consulta as $course => $dados) {
 	}
 
 	if ($dados->templates === '0') {
-		$frameworks_sem_template[] = array(
-			sizeof($frameworks_sem_template) + 1 . '.',
+		$frameworkswithouttemplates[] = array(
+			sizeof($frameworkswithouttemplates) + 1 . '.',
 			html_writer::link(
 				new moodle_url(
 					'/admin/tool/lp/learningplans.php',
@@ -260,7 +245,7 @@ foreach ($consulta as $course => $dados) {
 						'pagecontextid' => $context->id
 					)
 				),
-				'(' . $dados->trimestre . ') ' . implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
+				'(' . $dados->trimestre . ') ' . implode(' > ', array($dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina)),
 				array(
 					'target' => '_blank'
 				)
@@ -275,10 +260,10 @@ echo html_writer::tag('h3', get_string('consistencycheck_wrongframeworkscale', '
 $table = new html_table();
 $table->head = array(
 	'#',
-	get_string('pluginname', 'mod_assign'),
+	get_string('course', 'local_autocompgrade'),
 	get_string('scale', 'tool_lp')
 );
-$table->data = $frameworks_escala_incorreta;
+$table->data = $frameworkswithwrongscale;
 
 if (!empty($table->data)) {
 	echo html_writer::table($table);
@@ -291,10 +276,10 @@ echo html_writer::tag('h3', get_string('consistencycheck_coursesmissingcompetenc
 $table = new html_table();
 $table->head = array(
 	'#',
-	get_string('pluginname', 'mod_assign'),
+	get_string('course', 'local_autocompgrade'),
 	get_string('consistencycheck_numcompetencies', 'local_autocompgrade')
 );
-$table->data = $cursos_faltando_competencias;
+$table->data = $coursesmissingcompetencies;
 
 if (!empty($table->data)) {
 	echo html_writer::table($table);
@@ -307,10 +292,10 @@ echo html_writer::tag('h3', get_string('consistencycheck_modulesmissingcompetenc
 $table = new html_table();
 $table->head = array(
 	'#',
-	get_string('pluginname', 'mod_assign'),
+	get_string('course', 'local_autocompgrade'),
 	get_string('consistencycheck_numcompetencies', 'local_autocompgrade')
 );
-$table->data = $avaliacoes_faltando_competencias;
+$table->data = $activitiesmissingcompetencies;
 
 if (!empty($table->data)) {
 	echo html_writer::table($table);
@@ -322,7 +307,6 @@ $consulta = $DB->get_records_sql('
 	select
 		ga.id,
 		CONCAT(acgc.endyear, "T", acgc.endtrimester) trimestre,
-		modalidade.name modalidade,
 		escola.name escola,
 		programa.name programa,
 		classe.name classe,
@@ -330,35 +314,37 @@ $consulta = $DB->get_records_sql('
 		disciplina.fullname disciplina,
 		asg.name avaliacao,
 		COUNT(1) rubricas_sem_competencia
-	from mdl_local_autocompgrade_courses acgc
-		join mdl_course disciplina on disciplina.id = acgc.course
-		join mdl_course_categories bloco on bloco.id = disciplina.category
-		join mdl_course_categories classe on classe.id = bloco.parent
-		join mdl_course_categories programa on programa.id = classe.parent
-		join mdl_course_categories escola on escola.id = programa.parent
-		join mdl_course_categories modalidade on modalidade.id = escola.parent
-		join mdl_course_modules cm on cm.course = disciplina.id
-		join mdl_modules m on m.id = cm.module
-		join mdl_assign asg on asg.id = cm.instance
-		join mdl_context c on cm.id = c.instanceid
-		join mdl_grading_areas ga on c.id = ga.contextid
-		join mdl_grading_definitions gd on ga.id = gd.areaid
-		join mdl_gradingform_rubric_criteria grc on grc.definitionid = gd.id
+	from {local_autocompgrade_courses} acgc
+		join {course} disciplina on disciplina.id = acgc.course
+		join {course_categories} bloco on bloco.id = disciplina.category
+		join {course_categories} classe on classe.id = bloco.parent
+		join {course_categories} programa on programa.id = classe.parent
+		join {course_categories} escola on escola.id = programa.parent
+		join {course_modules} cm on cm.course = disciplina.id
+		join {modules} m on m.id = cm.module
+		join {assign} asg on asg.id = cm.instance
+		join {context} c on cm.id = c.instanceid
+		join {grading_areas} ga on c.id = ga.contextid
+		join {grading_definitions} gd on ga.id = gd.areaid
+		join {gradingform_rubric_criteria} grc on grc.definitionid = gd.id
 		left join (
 			select cmcomp.cmid,
 				comp.idnumber,
 				comp.shortname
-			from mdl_competency_modulecomp cmcomp
-			join mdl_competency as comp on comp.id = cmcomp.competencyid
+			from {competency_modulecomp} cmcomp
+			join {competency} as comp on comp.id = cmcomp.competencyid
 		) comp on comp.cmid = cm.id
 			and comp.idnumber = LEFT(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(grc.description, "[c]", ""), "\n", ""), "\r", ""), "\t", ""), " ", ""), LOCATE(".", REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(grc.description, "[c]", ""), "\n", ""), "\r", ""), "\t", ""), " ", "")) - 1)
 	where m.name = "assign"
 		and COALESCE(?, CONCAT(acgc.endyear, "T", acgc.endtrimester)) in (0, CONCAT(acgc.endyear, "T", acgc.endtrimester))
 		and COALESCE(?, bloco.id) in (0, bloco.id)
 		and comp.idnumber is null
+		and exists (
+			select 1 from {competency_modulecomp} cmcompfiltro
+			where cmcompfiltro.cmid = cm.id
+		)
 	group by cm.id
-	order by modalidade,
-		escola,
+	order by escola,
 		programa,
 		classe,
 		bloco,
@@ -386,7 +372,7 @@ foreach ($consulta as $areaid => $dados) {
 					'areaid' => $areaid
 				)
 			),
-			'(' . $dados->trimestre . ') ' . implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
+			'(' . $dados->trimestre . ') ' . implode(' > ', array($dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
 			array(
 				'target' => '_blank'
 			)
@@ -408,7 +394,7 @@ $table->head = array(
 	'#',
 	get_string('pluginname', 'mod_assign')
 );
-$table->data = $frameworks_sem_template;
+$table->data = $frameworkswithouttemplates;
 
 if (!empty($table->data)) {
 	echo html_writer::table($table);
@@ -418,56 +404,46 @@ if (!empty($table->data)) {
 
 $consulta = $DB->get_records_sql('
 	select
-		cm.id,
-		cm.course,
+		disciplina.id course,
 		compfwk.id frameworkid,
 		CONCAT(acgc.endyear, "T", acgc.endtrimester) trimestre,
-		modalidade.name modalidade,
 		escola.name escola,
 		programa.name programa,
 		classe.name classe,
 		bloco.name bloco,
 		disciplina.fullname disciplina,
-		asg.name avaliacao,
 		comptpl.templateid,
 		GROUP_CONCAT(distinct CONCAT_WS("-", usr.id, CONCAT_WS(" ", usr.firstname, usr.lastname)) order by usr.firstname, usr.lastname) estudantes,
 		GROUP_CONCAT(distinct CONCAT_WS("-", coh.id, coh.name) order by coh.name, coh.id) coortes
-	from mdl_local_autocompgrade_courses acgc
-		join mdl_course_modules cm on cm.course = acgc.course
-		join mdl_course disciplina on disciplina.id = cm.course
-		join mdl_course_categories bloco on bloco.id = disciplina.category
-		join mdl_course_categories classe on classe.id = bloco.parent
-		join mdl_course_categories programa on programa.id = classe.parent
-		join mdl_course_categories escola on escola.id = programa.parent
-		join mdl_course_categories modalidade on modalidade.id = escola.parent
-		join mdl_modules m on m.id = cm.module
-		join mdl_assign asg on asg.id = cm.instance
-		join mdl_competency_coursecomp crscomp on crscomp.courseid = cm.course
-		join mdl_competency comp on comp.id = crscomp.competencyid
-		join mdl_competency_framework compfwk on compfwk.id = comp.competencyframeworkid
-		join mdl_context ctx on ctx.instanceid = cm.course
-		join mdl_role_assignments ra on ra.contextid = ctx.id
-		join mdl_role r on r.id = ra.roleid
-		join mdl_user usr on usr.id = ra.userid
-		join mdl_competency_templatecomp comptpl on comptpl.competencyid = comp.id
-		left join mdl_competency_templatecohort tplcoh on tplcoh.templateid = comptpl.templateid
-		left join mdl_cohort coh on coh.id = tplcoh.cohortid
-		left join mdl_competency_plan pln on pln.templateid = comptpl.templateid
+	from {local_autocompgrade_courses} acgc
+		join {course} disciplina on disciplina.id = acgc.course
+		join {course_categories} bloco on bloco.id = disciplina.category
+		join {course_categories} classe on classe.id = bloco.parent
+		join {course_categories} programa on programa.id = classe.parent
+		join {course_categories} escola on escola.id = programa.parent
+		join {competency_coursecomp} crscomp on crscomp.courseid = acgc.course
+		join {competency} comp on comp.id = crscomp.competencyid
+		join {competency_framework} compfwk on compfwk.id = comp.competencyframeworkid
+		join {context} ctx on ctx.instanceid = acgc.course
+		join {role_assignments} ra on ra.contextid = ctx.id
+		join {role} r on r.id = ra.roleid
+		join {user} usr on usr.id = ra.userid
+		join {competency_templatecomp} comptpl on comptpl.competencyid = comp.id
+		left join {competency_templatecohort} tplcoh on tplcoh.templateid = comptpl.templateid
+		left join {cohort} coh on coh.id = tplcoh.cohortid
+		left join {competency_plan} pln on pln.templateid = comptpl.templateid
 			and pln.userid = ra.userid
-	where m.name = "assign"
-		and ctx.contextlevel = 50
+	where ctx.contextlevel = 50
 		and r.shortname = "student"
 		and pln.id is null
-		and COALESCE(?, CONCAT(acgc.endyear, "T", acgc.endtrimester)) in (0, CONCAT(acgc.endyear, "T", acgc.endtrimester))
-		and COALESCE(?, bloco.id) in (0, bloco.id)
-	group by cm.id
-	order by modalidade,
-		escola,
+		and COALESCE(0, CONCAT(acgc.endyear, "T", acgc.endtrimester)) in (0, CONCAT(acgc.endyear, "T", acgc.endtrimester))
+		and COALESCE(0, bloco.id) in (0, bloco.id)
+	group by disciplina.id
+	order by escola,
 		programa,
 		classe,
 		bloco,
-		disciplina,
-		avaliacao
+		disciplina
 ', array($pageparams['trimestre'], $pageparams['bloco']));
 
 echo html_writer::tag('h3', get_string('consistencycheck_studentswithoutplan', 'local_autocompgrade'));
@@ -475,12 +451,12 @@ echo html_writer::tag('h3', get_string('consistencycheck_studentswithoutplan', '
 $table = new html_table();
 $table->head = array(
 	'#',
-	get_string('pluginname', 'mod_assign'),
+	get_string('course', 'local_autocompgrade'),
 	get_string('students', 'local_autocompgrade'),
 	get_string('consistencycheck_frameworkcohorts', 'local_autocompgrade')
 );
 $table->data = array();
-foreach ($consulta as $cmid => $dados) {
+foreach ($consulta as $course => $dados) {
 	$estudantes = array();
 	foreach (explode(',', $dados->estudantes) as $estudante) {
 		$estudante_array = explode('-', $estudante);
@@ -527,7 +503,7 @@ foreach ($consulta as $cmid => $dados) {
 					'pagecontextid' => $context->id
 				)
 			),
-			'(' . $dados->trimestre . ') ' . implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
+			'(' . $dados->trimestre . ') ' . implode(' > ', array($dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina)),
 			array(
 				'target' => '_blank'
 			)
@@ -546,7 +522,6 @@ if (!empty($table->data)) {
 $consulta = $DB->get_records_sql('
 	select CONCAT(cm.id, "-", comp.id) cmcompid,
 		CONCAT(acgc.endyear, "T", acgc.endtrimester) trimestre,
-		modalidade.name modalidade,
 		escola.name escola,
 		programa.name programa,
 		classe.name classe,
@@ -560,22 +535,21 @@ $consulta = $DB->get_records_sql('
 		comp.shortname,
 		comp.competencyframeworkid,
 		COUNT(grc.id) qtd_rubricas
-	from mdl_local_autocompgrade_courses acgc
-		join mdl_course_modules cm on cm.course = acgc.course
-		join mdl_course disciplina on disciplina.id = cm.course
-		join mdl_course_categories bloco on bloco.id = disciplina.category
-		join mdl_course_categories classe on classe.id = bloco.parent
-		join mdl_course_categories programa on programa.id = classe.parent
-		join mdl_course_categories escola on escola.id = programa.parent
-		join mdl_course_categories modalidade on modalidade.id = escola.parent
-		join mdl_modules m on m.id = cm.module
-		join mdl_assign asg on asg.id = cm.instance
-		join mdl_competency_modulecomp cmcomp on cmcomp.cmid = cm.id
-		join mdl_competency as comp on comp.id = cmcomp.competencyid
-		join mdl_context c on cm.id = c.instanceid
-		left join mdl_grading_areas ga on ga.contextid = c.id
-		left join mdl_grading_definitions gd on ga.id = gd.areaid
-		left join mdl_gradingform_rubric_criteria grc on grc.definitionid = gd.id
+	from {local_autocompgrade_courses} acgc
+		join {course_modules} cm on cm.course = acgc.course
+		join {course} disciplina on disciplina.id = cm.course
+		join {course_categories} bloco on bloco.id = disciplina.category
+		join {course_categories} classe on classe.id = bloco.parent
+		join {course_categories} programa on programa.id = classe.parent
+		join {course_categories} escola on escola.id = programa.parent
+		join {modules} m on m.id = cm.module
+		join {assign} asg on asg.id = cm.instance
+		join {competency_modulecomp} cmcomp on cmcomp.cmid = cm.id
+		join {competency} as comp on comp.id = cmcomp.competencyid
+		join {context} c on cm.id = c.instanceid
+		left join {grading_areas} ga on ga.contextid = c.id
+		left join {grading_definitions} gd on ga.id = gd.areaid
+		left join {gradingform_rubric_criteria} grc on grc.definitionid = gd.id
 			and comp.idnumber = LEFT(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(grc.description, "[c]", ""), "\n", ""), "\r", ""), "\t", ""), " ", ""), LOCATE(".", REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(grc.description, "[c]", ""), "\n", ""), "\r", ""), "\t", ""), " ", "")) - 1)
 	where m.name = "assign"
 		and COALESCE(?, CONCAT(acgc.endyear, "T", acgc.endtrimester)) in (0, CONCAT(acgc.endyear, "T", acgc.endtrimester))
@@ -583,8 +557,7 @@ $consulta = $DB->get_records_sql('
 	group by cm.id,
 		comp.id
 	having qtd_rubricas < 4
-	order by modalidade,
-		escola,
+	order by escola,
 		programa,
 		classe,
 		bloco,
@@ -607,7 +580,7 @@ foreach ($consulta as $dados) {
 					'areaid' => $dados->areaid
 				)
 			),
-			'(' . $dados->trimestre . ') ' . implode(' > ', array($dados->modalidade, $dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
+			'(' . $dados->trimestre . ') ' . implode(' > ', array($dados->escola, $dados->programa, $dados->classe, $dados->bloco, $dados->disciplina, $dados->avaliacao)),
 			array(
 				'target' => '_blank'
 			)
@@ -667,5 +640,5 @@ if (!empty($table->data)) {
 } else {
 	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompgrade'), array('class' => 'alert alert-success'));
 }
-//*/
+
 echo $OUTPUT->footer();

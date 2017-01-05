@@ -19,8 +19,8 @@ class gradeassigncompetencies_form extends moodleform {
 
 		$mform = $this->_form;
 
-		$hier = $mform->addElement('hierselect', 'avaliacoes', get_string('gradeassigncompetencies_selectassigngrading', 'local_autocompgrade'));
-		$hier->setOptions(array($selectoptions['trimestres'], $selectoptions['modalidades'], $selectoptions['escolas'], $selectoptions['programas'], $selectoptions['classes'], $selectoptions['blocos'], $selectoptions['disciplinas'], $selectoptions['avaliacoes'], $selectoptions['correcoes']));
+		$hier = $mform->addElement('hierselect', 'disciplinas', get_string('gradeassigncompetencies_selectcoursestudent', 'local_autocompgrade'));
+		$hier->setOptions(array($selectoptions['trimestres'], $selectoptions['escolas'], $selectoptions['programas'], $selectoptions['classes'], $selectoptions['blocos'], $selectoptions['disciplinas'], $selectoptions['estudantes']));
 
 		$this->add_action_buttons(false, get_string('gradeassigncompetencies_submit', 'local_autocompgrade'));
 	}

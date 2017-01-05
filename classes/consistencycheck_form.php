@@ -20,7 +20,7 @@ class consistencycheck_form extends moodleform {
 		$mform = $this->_form;
 
 		$hier = $mform->addElement('hierselect', 'bloco', get_string('consistencycheck_selecttrimestercategory', 'local_autocompgrade'));
-		$hier->setOptions(array($selectoptions['trimestres'], $selectoptions['modalidades'], $selectoptions['escolas'], $selectoptions['programas'], $selectoptions['classes'], $selectoptions['blocos']));
+		$hier->setOptions(array($selectoptions['trimestres'], $selectoptions['escolas'], $selectoptions['programas'], $selectoptions['classes'], $selectoptions['blocos']));
 
 		$this->add_action_buttons(false, get_string('consistencycheck_submit', 'local_autocompgrade'));
 	}

@@ -20,7 +20,7 @@ class autocompgrade {
 	public static function get_query_string($queryname) {
 		$query;
 
-		if ($queryname === 'avaliacoes_curso_estudante') {
+		if ($queryname === 'student_course_activities') {
 			// Quantidade de avaliações existentes e corrigidas no curso
 			$query = '
 				select cm.id cmid,
@@ -172,7 +172,7 @@ class autocompgrade {
 			);
 		}
 
-		$result = $DB->get_records_sql(self::get_query_string('avaliacoes_curso_estudante'), array(
+		$result = $DB->get_records_sql(self::get_query_string('student_course_activities'), array(
 			$courseid, $studentid
 		));
 
@@ -181,6 +181,7 @@ class autocompgrade {
 			if ($values->graded === '0') {
 				if (!$noreturn) {
 					$return['msg'] = 'error_pendingactivities';
+					$return['params']['module'] = $values->module;
 					$return['params']['cmid'] = $cmid;
 					return $return;
 				} else {
@@ -226,7 +227,14 @@ class autocompgrade {
 			}
 		}
 
-		//print_object($competenciesresults);
+		$currentgrades = $DB->get_records('competency_usercompcourse', array('courseid' => $courseid, 'userid' => $studentid));
+
+		foreach ($currentgrades as $usercompcourseid => $values) {
+			if (isset($values->grade) && isset($competenciesresults[$values->competencyid]) && $values->grade == $competenciesresults[$values->competencyid]->get_grade()) {
+				unset($competenciesresults[$values->competencyid]);
+			}
+		}
+
 		if (!empty($competenciesresults)) {
 			$params = array(
 				'wstoken' => $CFG->moodle_wstoken,
@@ -309,10 +317,10 @@ class autocompgrade {
 			$link_params['user'] = $studentid;
 			$link_string = 'gradeassigncompetencies_linkcompetencybreakdown';
 			$div_class .= ' alert-success';
-		} else if ($result['msg'] === 'error_nogradingrows') {
+		} else if ($result['msg'] === 'error_nogradingrows' || ($result['msg'] === 'error_pendingactivities' && $result['params']['module'] === 'assign')) {
 			$link_url = '/mod/assign/view.php';
 			$link_params['action'] = 'grader';
-			$link_params['id'] = $courseid;
+			$link_params['id'] = $result['params']['cmid'];
 			$link_params['userid'] = $studentid;
 			$link_string = 'gradeassigncompetencies_linkgrader';
 			$div_class .= ' alert-info';
@@ -322,6 +330,13 @@ class autocompgrade {
 			$link_params['pagecontextid'] = $context->id;
 			$link_params['return'] = 'competencies';
 			$link_string = 'gradeassigncompetencies_linkcompetencyframework';
+			$div_attributes .= ' alert-error';
+		} else if ($result['msg'] === 'error_pendingactivities' && $result['params']['module'] === 'quiz') {
+			$link_url = '/mod/quiz/report.php';
+			$link_params['id'] = $result['params']['cmid'];
+			$link_params['mode'] = 'overview';
+			$link_params['return'] = 'competencies';
+			$link_string = 'gradeassigncompetencies_linkquizattempts';
 			$div_attributes .= ' alert-error';
 		}
 
@@ -339,12 +354,11 @@ class autocompgrade {
 		return \html_writer::div($result_content, $div_class);
 	}
 
-	public static function gradeassigncompetencies_submissiongraded(\core\event\base  $event) {
-		if ($event->eventname === '\mod_assign\event\submission_graded') {
+	public static function gradeassigncompetencies_event(\core\event\base  $event) {
+		if (in_array($event->eventname, array('\mod_assign\event\submission_graded', '\mod_quiz\event\attempt_submitted'))) {
 			self::gradeassigncompetencies(
-				$event->contextinstanceid,
-				$event->relateduserid,
 				$event->courseid,
+				$event->relateduserid,
 				true
 			);
 		}
