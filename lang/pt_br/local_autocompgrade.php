@@ -1,10 +1,27 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 /**
- * Plugin version info
+ * Textos do plugin em português do Brasil.
  *
+ * Contém os textos utilizados pelo plugin, em português do Brasil.
+ * 
  * @package    local_autocompgrade
- * @copyright  2016 Instituto Infnet
- */
+ * @copyright  2017 Instituto Infnet {@link http://infnet.edu.br}
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+*/
 
 $string['and'] = 'e';
 $string['consistencycheck'] = 'Relatório de consistência para avaliação automática de competências';
@@ -27,7 +44,7 @@ $string['course'] = 'Disciplina';
 $string['error_nogradingrows'] = 'Erro: não foram encontradas avaliações de rubricas na correção ou tarefa não possui competências associadas para avaliar.';
 $string['error_notstandardscale'] = 'Erro: competência não está cadastrada com a escala padrão.';
 $string['error_pendingactivities'] = 'Erro: uma avaliação associada às competências do curso está sem entrega ou com correção pendente.';
-$string['gradeassigncompetencies'] = 'Avaliar competências de tarefa';
+$string['gradeassigncompetencies'] = 'Forçar avaliação de competências';
 $string['gradeassigncompetencies_instruction'] = 'Selecione abaixo uma disciplina e estudante para avaliar as competências correspondentes.';
 $string['gradeassigncompetencies_linkcompetencybreakdown'] = 'Clique aqui para ver a distribuição de competências.';
 $string['gradeassigncompetencies_linkcompetencyframework'] = 'Clique aqui para ver o framework de competências.';

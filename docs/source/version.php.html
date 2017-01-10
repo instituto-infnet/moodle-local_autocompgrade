@@ -1,0 +1,76 @@
+<html>
+    <head>
+        <script
+            type="text/javascript"
+            src="../js/jquery-1.4.2.min.js">
+        </script>
+        <script
+            type="text/javascript"
+            src="../syntax_highlighter/scripts/shCore.js">
+        </script>
+        <script
+            type="text/javascript"
+            src="../syntax_highlighter/scripts/shBrushJScript.js">
+        </script>
+        <script
+            type="text/javascript"
+            src="../syntax_highlighter/scripts/shBrushPhp.js">
+        </script>
+        <script
+            type="text/javascript"
+            src="../syntax_highlighter/scripts/shBrushXml.js">
+        </script>
+        <link
+            href="../syntax_highlighter/styles/shCore.css" rel="stylesheet"
+            type="text/css"
+        />
+        <link
+            href="../syntax_highlighter/styles/shCoreEclipse.css"
+            rel="stylesheet" type="text/css"
+        />
+        <link
+            href="../syntax_highlighter/styles/shThemeWordpress.css"
+            rel="stylesheet" type="text/css"
+        />
+    </head>
+    <body>
+        <pre class="brush: php">&lt;?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+/**
+ * Detalhes da vers&atilde;o do plugin.
+ * 
+ * Define a vers&atilde;o atual do plugin, nome e vers&atilde;o m&iacute;nima do Moodle necess&aacute;ria.
+ *
+ * @package    local_autocompgrade
+ * @copyright  2017 Instituto Infnet {@link http://infnet.edu.br}
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+*/
+
+defined('MOODLE_INTERNAL') || die();
+
+
+$plugin-&gt;version   = 2017010502; // The current plugin version (Date: YYYYMMDDXX).
+$plugin-&gt;requires  = 2016051900; // Requires this Moodle version.
+$plugin-&gt;component = 'local_autocompgrade'; // Full name of the plugin (used for diagnostics).
+</pre>
+        <script type="text/javascript">
+             SyntaxHighlighter.all();
+             jQuery('.gutter div').each(function(key, data){
+                jQuery(data).prepend('<a name="L'+jQuery(data).text()+'"/>');
+             });
+        </script>
+    </body>
+</html>

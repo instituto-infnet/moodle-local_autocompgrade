@@ -1,0 +1,459 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project title="API Documentation" version="2.9.0">
+  <partials/>
+  <file path="classes\consistencycheck_form.php" generated-path="classes.consistencycheck_form.html" hash="b33527e89cfa6c67a4f0dbc2677bd944" package="local_autocompgrade">
+    <docblock line="0">
+      <description>Arquivo contendo classe para formulário de filtro do
+relatório de consistência.</description>
+      <long-description>Contém classe do formulário usado para filtrar os relatórios de consistência.</long-description>
+      <tag name="package" line="0" description="local_autocompgrade"/>
+      <tag name="copyright" line="0" description="2017 Instituto Infnet {@link http://infnet.edu.br}"/>
+      <tag name="license" line="0" description="GNU GPL v3 or later" link="http://www.gnu.org/copyleft/gpl.html"/>
+    </docblock>
+    <class final="false" abstract="false" namespace="" line="46" package="local_autocompgrade">
+      <extends>\moodleform</extends>
+      <name>consistencycheck_form</name>
+      <full_name>\consistencycheck_form</full_name>
+      <docblock line="46">
+        <description>Classe do formulário de filtro.</description>
+        <long-description>Exibe um formulário com a seguinte sequência de campos de seleção, usado para
+filtrar o relatório de consistência:
+- Trimestre
+- Escola
+- Programa
+- Classe
+- Bloco</long-description>
+        <tag name="package" line="46" description="local_autocompgrade"/>
+        <tag name="copyright" line="46" description="2017 Instituto Infnet {@link http://infnet.edu.br}"/>
+        <tag name="license" line="46" description="GNU GPL v3 or later" link="http://www.gnu.org/copyleft/gpl.html"/>
+      </docblock>
+      <method final="false" abstract="false" static="false" visibility="public" namespace="" line="51" package="local_autocompgrade">
+        <name>definition</name>
+        <full_name>\consistencycheck_form::definition()</full_name>
+        <docblock line="51">
+          <description>Função herdada de moodleform, define o formulário, incluindo o campo
+de seleção hierárquica de trimestres e blocos e botão para filtrar.</description>
+          <long-description></long-description>
+        </docblock>
+      </method>
+    </class>
+    <source>eJzVVVGPGjcQfs5J9x/m4aSFEyxt8lDpkl5DrnBBIoA4TtEpOiGzO7trxWtvbC8XlPTHVH2o2tf+BP5Yx/YSuBZdn4sQeDwzn2fmm7Ff/VQV1elJrweLghvIuECg/4ppCyqDd0qltNOFwtrqotcrvRwrnfeck3dsbJy3RgSjMvvANF7ARtWQMAkaU26s5qvakpkFJtOe0lCqlGcbD0GbtUxRgy0QLOrSuMOdcD25hWuUqJmAWb0SPIExT1AaBEZhuh1TYAqrAORchi6KmyYKGCpCZpYr2QHkpNewRm1Ihhe7QxrEDijtUVrMuuA1qMo5tiniDQhm977xkez3SabApQcuVEX5FARHGT5wIWCFUBvMatHx3mQN70eLt9PbBfQnd/C+P5/3J4u7l2RtC0VaXGPA4mUlOEFTVppJu6HgQwCD+dVb8um/GY1HizvKAYajxWRwcwPD6Rz6MOvPF6Or23F/DrPb+Wx6M4gBbtAFhh7hiRpnnicqY4qWcWH2ed8RuYYiFCkUbI1EcoJ8TfExSFS1+W/+PAoTSuY+16aQFNooA6lsBwyF+Krpu4eHhziXtW88EfxN79JFc35+egLn0Nefar5WdLa0KFNaCGYoAWpk5rIoa7H9VXNFibgmt5pWyntqJGa3fzU68jfE4/ZPmXAWewP/c0W42z/KHSwdcAhaG0Y74SwHzqh1zAGyOQ7tkV9XLPnIcgT6CJUwsWS1VYkqq1yzFIONK6nmeWEBnn/3/Q8wksZyS3a0yiRa+PJacPlxN6bcb8aY1vFK/xIgmrK5Y44U1R0gMLO9vBJxYUsRmJuNYf3CtZTv/tOTcyL/9CTFjEtMW9G76fTn8WA5miwG80l/HLXh61eaA2y1Xzo7jUSKxqWSCbbOrobX3UvBVynXcdRz5TMkxXT/RMF8x+XV0Rp/I+6AlcFn7gaqfGRIpaMmNJjXnHqBFp/qUHNPAiurQIdBgdvft7+pzgF9HvUbhU/1xoU37cJC8xJp8LGRByZRgjXCTCsisdyJIbFGeENkq30q/6s2ANcHfhR2RUGZbJICk49LRwXgZzeFBsJ74be+nJ48CwzvPucwrKWnAOhaTlnqGdq7dCA0GjxqhA5drokgbokyFfh8hHlILRQcNXlRGyYe3O7YMoCwcgz4hbLO+HB+40PM3l6owh2W1TJxT0OIkLtlq00JuiSfnbnzExseDwM/wpmlt7V7uUxqY1VJrxH7ED2yie79AJBr6Wu1d3HiTueScSpv071kaToQWKK0rcipAmLUgcgnRosc7dK9STJvRf/iKZg3BUGdELO50hvnf6T/orab0SaI7qVBOw2ht9xztGk9zvlDtC90dN+Bf2rRD8lRVdWMzFFluH2PqgKZ0X27vStXqCBVack8V0t6bK2LOGPCPfZPV6deldw+XQyaKPr+DUUHFP4=</source>
+  </file>
+  <file path="db\upgrade.php" generated-path="db.upgrade.html" hash="2696112eb2e69b6cfa45e94f0674dbc5" package="local_autocompgrade">
+    <docblock line="0">
+      <description>Script de atualização do banco de dados quando o plugin for atualizado.</description>
+      <long-description>Ao atualizar o plugin, realiza as alterações necessárias na tabela do plugin.</long-description>
+      <tag name="package" line="0" description="local_autocompgrade"/>
+      <tag name="copyright" line="0" description="2017 Instituto Infnet {@link http://infnet.edu.br}"/>
+      <tag name="license" line="0" description="GNU GPL v3 or later" link="http://www.gnu.org/copyleft/gpl.html"/>
+    </docblock>
+    <function namespace="" line="35" package="local_autocompgrade">
+      <name>xmldb_local_autocompgrade_upgrade</name>
+      <full_name>\xmldb_local_autocompgrade_upgrade()</full_name>
+      <docblock line="35">
+        <description>Atualiza a tabela local_autocompgrade_courses de acordo com a versão mais
+atual do plugin.</description>
+        <long-description></long-description>
+        <tag name="package" line="35" description="local_autocompgrade"/>
+        <tag name="param" line="35" description="&lt;p&gt;Versão do plugin antes de ser atualizado.&lt;/p&gt;" type="string" variable="$oldversion">
+          <type>string</type>
+        </tag>
+        <tag name="return" line="35" description="Verdadeiro quando a atualização for realizada sem erros." type="boolean">
+          <type>boolean</type>
+        </tag>
+      </docblock>
+      <argument line="0" by_reference="false">
+        <name>$oldversion</name>
+        <default></default>
+        <type>string</type>
+      </argument>
+    </function>
+    <source>eJy9VttuIkcQfcaS/6EiWQIsDNgr5bLrdYxt7EXCQLhk10+ome5hWtvTPdvdY8zu+mOiPOQL8gX+sVT3DBhj5LBREj8AU111uurUqRof/5xEye5OrQbDiBsIuWCA3wnRFlQI10pRtBxAZG3yulaL/XNV6WnNBfnA3MdFa8bAqNDOiGavYa5SCIgEzSg3VvNJatHNApG0pjTEivJw7iHQmErKNNiIgWU6Nu5y93DVGcEVk0wTAb10IngAbR4waRgQTNNZTMQoTDIgF3LpshjkWcClQmRiuZIVYBzPNdwybfAZXi0uyREroLRHKRHrktegEhdYxoznIIh9jK1uqP6xSApceuBIJVhPhHBY4YwLARMGqWFhKio+Gr3hfWv4rjsaQqNzA+8b/X6jM7x5g942UnjKblmGxeNEcITGqjSRdo7JZwk0++fvMKZx1mq3hjdYA1y2hp3mYACX3T40oNfoD1vno3ajD71Rv9cdNKsAA+YSYx7hBY5D3yekkTJLuDCPdd9gcw1mKChE5JZhkwPGbzE/AoFK5n/fP49ChJJTX2tOJKbWCkEqWwGDKR7nupvNZtWpTL3wRBZvaicum/393R3Yh0GgeWIxTSA2JYJ/Jg9/PPyugCqYEBkod0IJVQY+pag/BQoSkU6xT67ERQxVVY/mPxpqaddL9woW6k1OfkSgJNxFfzIDEgkw5uE3zfFEErBkwgRxCWSRHtkDnyYk+EimDPBPqICIMUmtClScTDWhLPNxJGo+jSzAUf3wB2hJY7lFP/wVSmbhy6ng8uNiMLk3VhlNqxN9n0HkRLlrNtDoLhAstLVpIqqRjUXWq14bbl85EXm97+7sY7t3dygLuWS0VLzudi/azXGrM2z2O412sQxfv6LyWan8xvkt2tHIiYMlDxsKHQc4Y9hI37VAaaQKzzDEDZlrXky48XC+D2tUwoJLTWJwk4dC2lOCLqb71xxkGYVTbLPLDHve8lPNbKolTJQSLhbFwrhWC7mQNV051eRKoAQBY2BaK+OxkLEwlYFbHXAXCzoZbyo+zb5LKzmX4cvuTmEq1ASr3bs485QW9ugkxi361lkOTqbMjvER5aNzzgs8hFUUOHaK+f7w8OjH+pGHRJ8CDtuFbyLueIZDS4zhUxnEnAJqCtcSoZT53y90quqQ9rCjuPHeouJneX3eUiq+EFl0uWJsdvlqrLeUio/5FCvw4bp9cTYe3vQypV01+xUoHtbxRKZCLM473WFn1G4vjNlnkUmKYoiZQfkWc4Zc9edKUu56QoRw2xw7FLmin/Hhi3Scfpcxf3DiPcbsDhe8KWXlVyArpZz1rFBY+CJiXtKao6//fr0ZHF97d6vNKKWSf0pZ+Zu7kiGtMustG5ltdS6aH8ajTuuXUbMC7oUyf+JX3oa39dSf8+Y9nvHmrRt5yxJec1zjrbHKABh89SSKS+uGMcB/BHwS+WiNs7kfL51KVqcI/DgdKBfPKxJTfEJtJtf7l8brqP5Tvb5hvDJastasd5NqlSTYT9we8X87Z/+rGlxZT+peSuGfKMGhbSWFJ/ssJ3yNZ6224HmbnbQVBauZPKPgW5aIp2CbLfJvTYMX81bTkL8mXSwa0fYXK2z2PQ==</source>
+  </file>
+  <file path="lang\pt_br\local_autocompgrade.php" generated-path="lang.pt_br.local_autocompgrade.html" hash="68e00607aff6f7aa8b5b4eaa1b7fbcf9" package="local_autocompgrade">
+    <docblock line="0">
+      <description>Textos do plugin em português do Brasil.</description>
+      <long-description>Contém os textos utilizados pelo plugin, em português do Brasil.</long-description>
+      <tag name="package" line="0" description="local_autocompgrade"/>
+      <tag name="copyright" line="0" description="2017 Instituto Infnet {@link http://infnet.edu.br}"/>
+      <tag name="license" line="0" description="GNU GPL v3 or later" link="http://www.gnu.org/copyleft/gpl.html"/>
+    </docblock>
+    <source>eJytV91uE0cUvkfKO5wLpLRRarflohLQFpMmECkNqeMIRVUVjXePd6fZnVlmZm0C4l2KelGV26pP4BfrNzNre22MY6BchPXume985//Mwx+rvNq50+3SIJeWRrJgwv+VMI70iH7WOsWbryh3rrrf7Zbhd0ebrOsPhYONjD9tmMnqkZsIw/fpRteUCEWGU2mdkcPaQcyRUGlXGyp1Kkc3AQIva5WyIZczOTal9cr9jyenF/SEFRtR0Fk9LGRCJzJhZZkEaPo3NueUhhHIHznyLM4bFnSkgSyc1GqfWOK7oTEbi990b6akQdwnbQLKF8J58oZ05Q9+CcY3VAi3ONtZY/3CyJSkCsC5rmBPDjhYOJFFQUOm2vKoLvbDaUjT8+PB02cXA+qdXtLzXr/fOx1cPoC0yzW+8pgjliyrQgIaVhmh3A3IRwKH/YOnONN7fHxyPLiEDXR0PDg9PD+no2d96tFZrz84Prg46fXp7KJ/9uz8sEN0zp4YB4QNPh6FOMGNKTshC7uw+xLBtWBYpJSLMSPICcsx+AlKdHVze/wCiii0yoKtjSNB7XhESrt9sqD4sMm7yWTSyVQdEq+I5233B89mb2/nDu3RgF86jRhoqoo6g/u5pEobV2f19F14/9gIK4uOlw4nDrRy079LwikXD9dOFvKVSPFYcTFD2t8IReHPo0ok1yJjwr9CJ6K4ErXTiS6rzIiUo4x3i5FZ7oi+/fqb7+hYWScd5PA0Uuzo9aNCqutZqcnwssNp3RmaNxGiMd2rWeMYr6DgketmVdHJXVlE75+d0PieT4uQwTt39hDAnTt3fbKq7NddVOPub/Q97fLug9brRCuLhGaV3CQ5J9dRps8Amf5jpEZGUCMzfacSKXzPECTGopBi+tf0T03eB+X0rZOJiNJlxY2w3ajrKorit2TbFAIrXWe5qYdGJjaSOWgDenh6UaMyZAqXowJtPfLucj55KR78BL0bNFokxra4tUHGltJaCLS1NLj4rKMJS16ikSgcAqQ3w6NrI7IR6gjPRhjfjRKJjqFu4zYyouSJNteJzpHlc0vxzCHb5wJb4sw85xgdCynX8Jp/Xs2F4MeZ8C1kMTPqYoMje7P0+5c/3Z0KDc/WhYuQ52An1VKq284tAHX5PrVfFrm5Wgzb8qrLpWxcRtwuExuAJkRzljdNeTcYISRSpXiOpbzCeLMOywUnDl9LxmuTIKyZNo2KQXxtuPsYnfIWi62rU1TwjC4yREWUQ/8F1jdR9h/0tm609bCUTXB7qJAE1eIryNxybmIwqxZZji5/e2p7cuxFRcghYzBGV7T4zhBxfpqX7JIIG6MNktKPErwwetLE/xAf7pPy8cGcFtDk0xTVnyKCol0JrfQg5VmBSAwsprjDmjQSEafS1tZyJTuFtRoPHrXV401nLUtnfQiESVsOikSXHBO0IQ+mb7EiAjmwDu4SM4dVIjWQWqemYuVdIRInx9LNSyzqqcuVMTSjT9M/7IppaG+J770NFZ/2yDfDmfCeiQ1k7iuv1c+TZUZhwkOHzNSH+pFZ1cqN07cBusIkwxRK/CY660ioL/zCCjwU8qUOFi/6PbG3JpbHUsBIrJofjLOVjnbZrQy78kvKonEMDYvrVE8abgeFfFGD2AtkUdCNhZnEfDeWa9vJJylejKUPK24Nr8/QGb6ZjfY57EWUtitre3hAvRJhWs6H71olfk9VDleZMR7h9bCr+oLW2HsQcWTE9C02s+00o1LrChcjToOEXW1Btp1G62YpzghXz1hspTMOhmYZiq19VW1b63aYbZzDjzvaHgTrCnVLlCRhu3ZBbPlnu6DgPjDrmf9H5/i8AH9sdJe05dyqme1hkZX8/qGmgaG+wpVC+BtFGTZ7z3oocCNC4359V7xZj3iVC+urLCKHYgljUQ9/51BOHzjWLEvt+p+N0f1Q6jKTYSricvWe9nh7VCC6spp+zM1otgCtbj1e6D+ScXt+</source>
+  </file>
+  <file path="classes\autocompgrade.php" generated-path="classes.autocompgrade.html" hash="288cf2b56fcec85486cbdf24585e4711" package="local_autocompgrade">
+    <docblock line="0">
+      <description>Arquivo contendo a principal classe do plugin.</description>
+      <long-description>Contém a classe que realiza as principais ações do plugin.</long-description>
+      <tag name="package" line="0" description="local_autocompgrade"/>
+      <tag name="copyright" line="0" description="2017 Instituto Infnet {@link http://infnet.edu.br}"/>
+      <tag name="license" line="0" description="GNU GPL v3 or later" link="http://www.gnu.org/copyleft/gpl.html"/>
+    </docblock>
+    <class final="false" abstract="false" namespace="local_autocompgrade" line="45" package="local_autocompgrade">
+      <extends/>
+      <name>autocompgrade</name>
+      <full_name>\local_autocompgrade\autocompgrade</full_name>
+      <docblock line="45">
+        <description>Classe principal do plugin.</description>
+        <long-description>Calcula e atualiza automaticamente os conceitos de competências de estudantes
+em cursos, conforme as regras do modelo PBL+CBL utilizado pelo Instituto
+Infnet.</long-description>
+        <tag name="package" line="45" description="local_autocompgrade"/>
+        <tag name="copyright" line="45" description="2017 Instituto Infnet {@link http://infnet.edu.br}"/>
+        <tag name="license" line="45" description="GNU GPL v3 or later" link="http://www.gnu.org/copyleft/gpl.html"/>
+      </docblock>
+      <method final="false" abstract="false" static="true" visibility="public" namespace="local_autocompgrade" line="61" package="local_autocompgrade">
+        <name>gradeassigncompetencies</name>
+        <full_name>\local_autocompgrade\autocompgrade::gradeassigncompetencies()</full_name>
+        <docblock line="61">
+          <description>Calcula os conceitos de cada competência para um estudante e curso
+específicos e atualiza o resultado, se for diferente do que já está
+gravado.</description>
+          <long-description></long-description>
+          <tag name="param" line="61" description="&lt;p&gt;O id do curso que terá as competências&#10;avaliadas.&lt;/p&gt;" type="integer" variable="$courseid">
+            <type>integer</type>
+          </tag>
+          <tag name="param" line="61" description="&lt;p&gt;O id de estudante que terá as competências&#10;avaliadas.&lt;/p&gt;" type="integer" variable="$studentid">
+            <type>integer</type>
+          </tag>
+          <tag name="param" line="61" description="&lt;p&gt;Verdadeiro para retornar void, evitando erros&#10;nas telas em que não é esperado retorno.&lt;/p&gt;" type="boolean" variable="$noreturn">
+            <type>boolean</type>
+          </tag>
+          <tag name="return" line="61" description="Se $noreturn for falso, array com chaves msg e&#10;params, contendo erros e informações sobre a execução." type="array|void">
+            <type>array</type>
+            <type>void</type>
+          </tag>
+        </docblock>
+        <argument line="0" by_reference="false">
+          <name>$courseid</name>
+          <default></default>
+          <type>integer</type>
+        </argument>
+        <argument line="0" by_reference="false">
+          <name>$studentid</name>
+          <default></default>
+          <type>integer</type>
+        </argument>
+        <argument line="0" by_reference="false">
+          <name>$noreturn</name>
+          <default>false</default>
+          <type>boolean</type>
+        </argument>
+      </method>
+      <method final="false" abstract="false" static="true" visibility="public" namespace="local_autocompgrade" line="213" package="local_autocompgrade">
+        <name>gradeassigncompetencies_printableresult</name>
+        <full_name>\local_autocompgrade\autocompgrade::gradeassigncompetencies_printableresult()</full_name>
+        <docblock line="213">
+          <description>Atualiza as competências de um estudante e curso específicos e
+retorna o código HTML de uma tag div contendo a mensagem de retorno.</description>
+          <long-description></long-description>
+          <tag name="param" line="213" description="&lt;p&gt;O id do curso que terá as competências&#10;avaliadas.&lt;/p&gt;" type="integer" variable="$courseid">
+            <type>integer</type>
+          </tag>
+          <tag name="param" line="213" description="&lt;p&gt;O id de estudante que terá as competências&#10;avaliadas.&lt;/p&gt;" type="integer" variable="$studentid">
+            <type>integer</type>
+          </tag>
+          <tag name="return" line="213" description="Código HTML de uma div contendo a mensagem de retorno,&#10;indicando sucesso ou erro e incluindo link para página relevante." type="string">
+            <type>string</type>
+          </tag>
+        </docblock>
+        <argument line="0" by_reference="false">
+          <name>$courseid</name>
+          <default></default>
+          <type>integer</type>
+        </argument>
+        <argument line="0" by_reference="false">
+          <name>$studentid</name>
+          <default></default>
+          <type>integer</type>
+        </argument>
+      </method>
+      <method final="false" abstract="false" static="true" visibility="public" namespace="local_autocompgrade" line="275" package="local_autocompgrade">
+        <name>gradeassigncompetencies_event</name>
+        <full_name>\local_autocompgrade\autocompgrade::gradeassigncompetencies_event()</full_name>
+        <docblock line="275">
+          <description>Atualiza as competências de um estudante e curso específicos,
+a partir de um evento de tarefa avaliada ou questionário respondido.</description>
+          <long-description></long-description>
+          <tag name="param" line="275" description="&lt;p&gt;O evento que foi disparado. A execução&#10;é realizada apenas se for um dos seguintes tipos de evento:&lt;/p&gt;&#10;&lt;ul&gt;&#10;&lt;li&gt;\mod_assign\event\submission_graded&lt;/li&gt;&#10;&lt;li&gt;\mod_quiz\event\attempt_submitted&lt;/li&gt;&#10;&lt;/ul&gt;" type="\core\event\base" variable="$event">
+            <type>\core\event\base</type>
+          </tag>
+        </docblock>
+        <argument line="0" by_reference="false">
+          <name>$event</name>
+          <default></default>
+          <type>\core\event\base</type>
+        </argument>
+      </method>
+      <method final="false" abstract="false" static="true" visibility="private" namespace="local_autocompgrade" line="293" package="local_autocompgrade">
+        <name>get_query_string</name>
+        <full_name>\local_autocompgrade\autocompgrade::get_query_string()</full_name>
+        <docblock line="293">
+          <description>Contém todos os comandos SQL utilizados para os cálculos do plugin.</description>
+          <long-description>Retorna o comando correspondente ao nome fornecido.</long-description>
+          <tag name="param" line="293" description="&lt;p&gt;O nome do comando SQL que deve ser&#10;retornado.&lt;/p&gt;" type="string" variable="$queryname">
+            <type>string</type>
+          </tag>
+          <tag name="return" line="293" description="O comando SQL correspondente ao nome informado." type="string">
+            <type>string</type>
+          </tag>
+        </docblock>
+        <argument line="0" by_reference="false">
+          <name>$queryname</name>
+          <default></default>
+          <type>string</type>
+        </argument>
+      </method>
+    </class>
+    <source>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</source>
+  </file>
+  <file path="settings.php" generated-path="settings.html" hash="57494a525440127ff9d5ee88f4578fbf" package="local_autocompgrade">
+    <docblock line="0">
+      <description>Página de configurações do plugin.</description>
+      <long-description>Inclui as páginas do plugin no menu lateral de administração do site, dentro
+do item Competências.</long-description>
+      <tag name="package" line="0" description="local_autocompgrade"/>
+      <tag name="copyright" line="0" description="2017 Instituto Infnet {@link http://infnet.edu.br}"/>
+      <tag name="license" line="0" description="GNU GPL v3 or later" link="http://www.gnu.org/copyleft/gpl.html"/>
+    </docblock>
+    <source>eJy1VE1v00AQPRMp/2EOlZJUqQ30gMRHqSkpWEqTKElV9RRt7LG96nrX2l0nRIUfgzggcecX9I8xuw4qpSkcEDk43tk3b9682fXL11VRtVthCPOCG8i4QKD/imkLKoMzpVKKHEBhbfU8DEu/DpTOQ5fkE7cYl60RwajMrpnG57BRNSRMgsaUG6v5srYEs8BkGioNpUp5tvEUFKxlihpsgWBRl8YVd4t3o3N4hxI1EzCpl4InMOQJSoPASKaLmAJTWDZELuXUqZhtVcCpImZmuZJ9QE77GlaoDa3h8GeRLWMflPYsXWadeA2qcok9UrwBwextbrCj+9smU+DSExeqon4KoqMO11wIWCLUBrNa9H02oeEinr8fn88hGl3CRTSdRqP55QtC20LRLq6w4eJlJThRU1eaSbsh8Y2AwfTkPeVEb+JhPL+kHuA0no8GsxmcjqcQwSSazuOT82E0hcn5dDKeDQKAGTph6Bn+4HHm50Q2pmgZF+a270sariGFIoWCrZCGnCBfkT4Giao2f5+fZ2FCydz3ujWSpMUZSGX7YEjiy+25W6/XQS5rf/BEk2/CI6dmf7/dgn2Y3HzOuWSkk8rLjOe1Zjdfb74jzUVBJWraDTzSP2KZiJr7I9Qk/gKj6lCirJuJk27iZGnJpZuvI/2iHNhwSycmRWm18pwUo1AJJ6qs0N58kwlnxtf028cVS65YjkA/oRImFqy2KiFwrlmKDcZZp3leWICnj588I53Gcks4esskWrg+Flxe/byO3AcDTOtgqT81FFt7XJkd5rkCAjMb5pUICluKZkKTIawO3dHxPbdb+zTkFDMuMe12zsbjt8PBIh7NB9NRNOz04ONHOu34ot1qt/YMWstlbuAVyFoIH+QZdLlZOIu8c91eD67brUd70duzeHRwxFKiTbxPSDah6fRB4rqxeZGQhlzpTbezwydC5mgX7qrJvNtpRiZZ6TZ24nu9ntd0pzgtH+1mdzu3UvAD2SGZqGhwPmln1sI/mTE8l3e78im/6n0Q+YD4hsEJaj69i1qLbif02PAONnyAOqAPfKfnaNzDefE/naDLZ+ieUOlNUmBytcOC+5B/7/13zvtN0+34AcE/Rv8=</source>
+  </file>
+  <file path="credentials_dist.php" generated-path="credentials_dist.html" hash="497c3184424f3c28998c7f8ce591d85b" package="local_autocompgrade">
+    <docblock line="0">
+      <description>Arquivo que contém a credencial de acesso para ações realizadas pelo plugin.</description>
+      <long-description>Armazena o token do usuário que irá incluir evidências automaticamente nas
+competências de estudantes em cursos.
+Este arquivo deve ser renomeado para credentials.php e o token deve ser
+incluído abaixo no lugar de "YOUR_TOKEN".</long-description>
+      <tag name="package" line="0" description="local_autocompgrade"/>
+      <tag name="copyright" line="0" description="2017 Instituto Infnet {@link http://infnet.edu.br}"/>
+      <tag name="license" line="0" description="GNU GPL v3 or later" link="http://www.gnu.org/copyleft/gpl.html"/>
+    </docblock>
+    <source>eJyFVNFu0zAUfZ/Uf7iakAZV1wJ7QNrGWJnaraK0VZpq6tPkxjeJNccOttPSIT5mTwgkHvmC/hjXTqa+TNCX1PY9557jc5PzD2Vetg56PYhzYSEVEoGeJTMOdAqftea0cwy5c+Vpr1eEdVebrOdBAdjUeLRBBKtTt2EGT2GrK0iYAoNcWGfEqnJU5oAp3tMGCs1Fug0UtFkpjgZcjuDQFNY394vryQKuUaFhEmbVSooExiJBZREYyfQ7NkcOq5rIQ4ZexbxRAUNNzMwJrTqAgs4NrNFYWsPJU5OGsQPaBJaXzHnxBnTpga9I8RYkc3ts9xn3e5MchArEuS7JT0505HAjpIQVQmUxrWQnoKkabkfxzXQRQ3+yhNt+FPUn8fKMql2u6RTXWHOJopSCqMmVYcptSXwtYBBd3RCm/3E0HsVL8gDDUTwZzOcwnEbQh1k/ikdXi3E/gtkimk3ngy7AHL0wDAz/uOM05ETXyNExIe3e95LCtaRQcsjZGinkBMWa9DFIdLn9f36BhUmtsuC1uUiSNkpBadcBSxLPm7nbbDbdTFVh8GSNt70Lr6bdbh1AG/rmSyXWGr5USP2V2/0svBIaPVSJoOacBiZBa7WfbQZs92P3By3JZlI8MO6HCSUdyioTPl7ibIgL9oCKgQan7ykLrinBavdoRN1NmN0j5Z3IShhKS/DdL9/RAqucLmjyElagoslXzAbGRBcluqcq0oXWVZwiJTlYQFIZq22tYGAJxxprnEaBLsWQZqULZLyxUpt0ZNJ26WUG3EttEIErSNz9JhRbMfFV0yUDmWXGSzhcThfRXTz9NJgchtYBclmy5J5lCPSTOmHyznvy+jPDONY1Pm0jstwBvH395h2MlHXCUR39SxU6+HYphbp/+oKIsNlFXnVX5ntN0STq2zyTt28gMXW9rJTd3BWyHqrZGNYnftrDi9k6aNNcvrgaXh9f1B+pu42tb+E9HO3dHZ21Dv4CFp6log==</source>
+  </file>
+  <file path="db\events.php" generated-path="db.events.html" hash="3bf90c900b752ff7d69174c61a659e44" package="local_autocompgrade">
+    <docblock line="0">
+      <description>Definição de observadores de eventos utilizados pelo plugin.</description>
+      <long-description>Registra observadores para os eventos de tarefa avaliada e questionário
+respondido, para atualizar as competências automaticamente.</long-description>
+      <tag name="package" line="0" description="local_autocompgrade"/>
+      <tag name="copyright" line="0" description="2017 Instituto Infnet {@link http://infnet.edu.br}"/>
+      <tag name="license" line="0" description="GNU GPL v3 or later" link="http://www.gnu.org/copyleft/gpl.html"/>
+    </docblock>
+    <source>eJy1VE1rGzEQPcfg/zCHgpPg2m1zKOSrcRM7MTi2WTsEQ8DIq9ldEa20kbQ2TtMfU3oo9G/kj3WkdRoCoe2lPngl7bw3b96M9vBTkRX1WrsN00xYSIREoGfBjAOdwKXWnE7eQuZcsd9u52Hf0iZte1AAbmI82iCC1YlbMYP7sNYlxEyBQS6sM2JROgpzwBRvawO55iJZBwo6LBVHAy5DcGhy65P7zfnwCs5RoWESxuVCihgGIkZlERjJ9Cc2Qw6LishDel7FZKMCepqYmRNaNQEFvTewRGNpD3tPSTaMTdAmsGwz58Ub0IUH7pDiNUjmnrGtV6p/LpKDUIE40wXVkxEdVbgSUsICobSYlLIZ0BQN1/3pxehqCp3hDK47UdQZTmcHFO0yTW9xiRWXyAspiJqqMky5NYmvBHSj0wvCdD73B/3pjGqAXn867E4m0BtF0IFxJ5r2T68GnQjGV9F4NOm2ACbohWFg+IPHSegT2cjRMSHtc90zaq4lhZJDxpZITY5RLEkfg1gX67/3L7AwqVUaat0YSdL6CSjtmmBJ4uFm7larVStVZRg8WeFt+9ir2d2t12AXzjARSjz+ePyuSSvohUWzZJykW7/3LjptoXRCins6p9lBqaGQZSp8N4ki/EWY+jaylwx0HejE/qYhRkfDlTBgSyYF4wwQ7kq0flwevxmhAxlBC6244LpZUTBXMp/f+OGNdV6ge/ypYkE7Vjqd05zGLKccGCQFkpOCxbcsRaCf1DGTcx/qwalhHKsYb7kRaeYAPrx7/xH6iqQ4iqNVotDBlxMp1O3TNRbhsIW8bC3M14piY6tP84rpPoHExLXTQrYyl8uqs+MBLPf8yIXbUa/t0nDUa9w3A/l243I0Oht05/3htBsNO4PGDjw80D3B7Z0DH/emMpmuFByBH+s1bNdrW8+rrUZwXJEnDTg6hsYNfTTmzFqRqpvw6saWi1xYfyfnwQ/eaAYgGSUX5FwDAvAV525e7Pb3w6PirlqD1Bm085AnsO40/0HdXSnuN9qYc5gXbh400vq/aqvXvKm/ABe27NY=</source>
+  </file>
+  <file path="classes\competency_result.php" generated-path="classes.competency_result.html" hash="e31755faf14649f77b22336c34146c9f" package="local_autocompgrade">
+    <docblock line="0">
+      <description>Arquivo contendo classe de apoio para cálculo de resultados.</description>
+      <long-description>Calcula e armazena o conceito de uma competência para um estudante.</long-description>
+      <tag name="package" line="0" description="local_autocompgrade"/>
+      <tag name="copyright" line="0" description="2017 Instituto Infnet {@link http://infnet.edu.br}"/>
+      <tag name="license" line="0" description="GNU GPL v3 or later" link="http://www.gnu.org/copyleft/gpl.html"/>
+    </docblock>
+    <class final="false" abstract="false" namespace="local_autocompgrade" line="41" package="local_autocompgrade">
+      <extends/>
+      <name>competency_result</name>
+      <full_name>\local_autocompgrade\competency_result</full_name>
+      <docblock line="41">
+        <description>Classe de apoio para
+{@link local_autocompgrade\autocompgrade::gradeassigncompetencies}</description>
+        <long-description>Responsável por calcular, armazenar e distribuir um conceito de uma
+competência de estudante em um curso.</long-description>
+        <tag name="package" line="41" description="local_autocompgrade"/>
+        <tag name="copyright" line="41" description="2017 Instituto Infnet {@link http://infnet.edu.br}"/>
+        <tag name="license" line="41" description="GNU GPL v3 or later" link="http://www.gnu.org/copyleft/gpl.html"/>
+      </docblock>
+      <property static="false" visibility="public" namespace="local_autocompgrade" line="43" package="local_autocompgrade">
+        <name>$competencyid</name>
+        <full_name>\local_autocompgrade\competency_result::competencyid</full_name>
+        <default></default>
+        <docblock line="43">
+          <description></description>
+          <long-description></long-description>
+          <tag name="var" line="43" description="&lt;p&gt;Id da competência que terá o resultado calculado.&lt;/p&gt;" type="integer" variable="">
+            <type>integer</type>
+          </tag>
+        </docblock>
+      </property>
+      <property static="false" visibility="public" namespace="local_autocompgrade" line="48" package="local_autocompgrade">
+        <name>$numquestions</name>
+        <full_name>\local_autocompgrade\competency_result::numquestions</full_name>
+        <default>0</default>
+        <docblock line="48">
+          <description></description>
+          <long-description></long-description>
+          <tag name="var" line="48" description="&lt;p&gt;Quantidade total de questões objetivas e rubricas que&#10;avaliam a competência.&lt;/p&gt;" type="integer" variable="">
+            <type>integer</type>
+          </tag>
+        </docblock>
+      </property>
+      <property static="false" visibility="public" namespace="local_autocompgrade" line="53" package="local_autocompgrade">
+        <name>$numgradedright</name>
+        <full_name>\local_autocompgrade\competency_result::numgradedright</full_name>
+        <default>0</default>
+        <docblock line="53">
+          <description></description>
+          <long-description></long-description>
+          <tag name="var" line="53" description="&lt;p&gt;Quantidade total de questões objetivas corretas e rubricas&#10;demonstradas.&lt;/p&gt;" type="integer" variable="">
+            <type>integer</type>
+          </tag>
+        </docblock>
+      </property>
+      <property static="false" visibility="public" namespace="local_autocompgrade" line="55" package="local_autocompgrade">
+        <name>$hasquiz</name>
+        <full_name>\local_autocompgrade\competency_result::hasquiz</full_name>
+        <default>false</default>
+        <docblock line="55">
+          <description></description>
+          <long-description></long-description>
+          <tag name="var" line="55" description="&lt;p&gt;Verdadeiro se a competência é avaliada em questionário.&lt;/p&gt;" type="boolean" variable="">
+            <type>boolean</type>
+          </tag>
+        </docblock>
+      </property>
+      <property static="false" visibility="public" namespace="local_autocompgrade" line="60" package="local_autocompgrade">
+        <name>$graders</name>
+        <full_name>\local_autocompgrade\competency_result::graders</full_name>
+        <default></default>
+        <docblock line="60">
+          <description></description>
+          <long-description></long-description>
+          <tag name="var" line="60" description="&lt;p&gt;Nomes de docentes que avaliaram itens de rubrica&#10;associados à competência.&lt;/p&gt;" type="array&lt;mixed,string&gt;" variable="">
+            <type>array&lt;mixed,string&gt;</type>
+          </tag>
+        </docblock>
+      </property>
+      <method final="false" abstract="false" static="false" visibility="public" namespace="local_autocompgrade" line="69" package="local_autocompgrade">
+        <name>__construct</name>
+        <full_name>\local_autocompgrade\competency_result::__construct()</full_name>
+        <docblock line="69">
+          <description>Retorna uma instância desta classe, com a propriedade competencyid
+igual ao valor informado.</description>
+          <long-description></long-description>
+          <tag name="param" line="69" description="&lt;p&gt;Id da competência, para inicializar a&#10;variável de mesmo nome.&lt;/p&gt;" type="integer" variable="$competencyid">
+            <type>integer</type>
+          </tag>
+        </docblock>
+        <argument line="0" by_reference="false">
+          <name>$competencyid</name>
+          <default></default>
+          <type>integer</type>
+        </argument>
+      </method>
+      <method final="false" abstract="false" static="false" visibility="public" namespace="local_autocompgrade" line="83" package="local_autocompgrade">
+        <name>get_grade</name>
+        <full_name>\local_autocompgrade\competency_result::get_grade()</full_name>
+        <docblock line="83">
+          <description>Calcula o conceito da competência conforme a porcentagem de questões
+objetivas corretas e rubricas demonstradas.</description>
+          <long-description></long-description>
+          <tag name="return" line="83" description="Grau do conceito calculado, conforme a escala Infnet:&#10;1 = Não demonstrou (&lt; 50%) /&#10;2 = Demonstrou (&gt;= 50%, &lt; 75%) /&#10;3 = Demonstrou com louvor (&gt;= 75%, &lt; 100%) /&#10;4 = Demonstrou com máximo louvor (100%)" type="integer">
+            <type>integer</type>
+          </tag>
+        </docblock>
+      </method>
+      <method final="false" abstract="false" static="false" visibility="public" namespace="local_autocompgrade" line="105" package="local_autocompgrade">
+        <name>get_grade_note</name>
+        <full_name>\local_autocompgrade\competency_result::get_grade_note()</full_name>
+        <docblock line="105">
+          <description>Organiza o texto do comentário incluído na evidência da alteração
+de conceito da competência, indicando se houve questões objetivas
+e incluindo os nomes de docentes que avaliaram as rubricas.</description>
+          <long-description></long-description>
+          <tag name="return" line="105" description="Texto do comentário." type="string">
+            <type>string</type>
+          </tag>
+        </docblock>
+      </method>
+    </class>
+    <source>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</source>
+  </file>
+  <file path="classes\gradeassigncompetencies_form.php" generated-path="classes.gradeassigncompetencies_form.html" hash="83892807d9f6cb3d4d575c63fd31a829" package="local_autocompgrade">
+    <docblock line="0">
+      <description>Arquivo contendo classe para formulário de filtro da página de avaliação
+automática de competências.</description>
+      <long-description>Contém classe do formulário usado para filtrar as listas de cursos e
+estudantes com conceitos atualizados ou não.</long-description>
+      <tag name="package" line="0" description="local_autocompgrade"/>
+      <tag name="copyright" line="0" description="2017 Instituto Infnet {@link http://infnet.edu.br}"/>
+      <tag name="license" line="0" description="GNU GPL v3 or later" link="http://www.gnu.org/copyleft/gpl.html"/>
+    </docblock>
+    <class final="false" abstract="false" namespace="" line="47" package="local_autocompgrade">
+      <extends>\moodleform</extends>
+      <name>gradeassigncompetencies_form</name>
+      <full_name>\gradeassigncompetencies_form</full_name>
+      <docblock line="47">
+        <description>Classe do formulário de filtro.</description>
+        <long-description>Exibe um formulário com a seguinte sequência de campos de seleção, usado para
+filtrar as listas de cursos e estudantes:
+- Trimestre
+- Escola
+- Programa
+- Classe
+- Bloco</long-description>
+        <tag name="package" line="47" description="local_autocompgrade"/>
+        <tag name="copyright" line="47" description="2017 Instituto Infnet {@link http://infnet.edu.br}"/>
+        <tag name="license" line="47" description="GNU GPL v3 or later" link="http://www.gnu.org/copyleft/gpl.html"/>
+      </docblock>
+      <method final="false" abstract="false" static="false" visibility="public" namespace="" line="52" package="local_autocompgrade">
+        <name>definition</name>
+        <full_name>\gradeassigncompetencies_form::definition()</full_name>
+        <docblock line="52">
+          <description>Função herdada de moodleform, define o formulário, incluindo o campo
+de seleção hierárquica de trimestres e blocos e botão para filtrar.</description>
+          <long-description></long-description>
+        </docblock>
+      </method>
+    </class>
+    <source>eJzVVs1uGzcQPseA32EOBlYy9NMmhwJO6lpxZUeAIgmyjMAIDIHanZWIcMkNyZWjJn0Yo4eifQ29WGdIqZILNem1gmGRnJlvfr4ZUq9+Khfl8VG7DZOFdJBLhUDfpbAeTA5vjcnopAkL78uzdrsI+5ax8zYbBcONDltbRHAm9w/C4hmsTAWp0GAxk85bOas8qXkQOmsbC4XJZL4KEHRY6Qwt+AWCR1s4ds6b68EtXKNGKxSMqpmSKfRlitohCAqTT9wCM5hFIDa54ihuNlHAlSFk4aXRDUBJcgtLtI728GLrZIPYAGMDSk14Dt6CKdmwThGvQAm/s20dyH6XZAZSB+CFKSmfBcFRhg9SKZghVA7zSjWCNWnDu97kzfB2Ap3BHbzrjMedweTuJWn7hSEpLjFiyaJUkqApKyu0X1HwMYDu+PIN2XRe9/q9yR3lAFe9yaB7cwNXwzF0YNQZT3qXt/3OGEa349HwptsCuEEODAPCV2qcB56ojBl6IZXb5X1H5DqKUGWwEEskklOUS4pPQGrK1bf5CyhCGT0PuW4KSaH1ctDGN8BRiK82fffw8NCa6yo0nor2rn3O0ZyeHh/BKXTsx0ouDfnWHnVGCyUcJUCNLDiLolLrRysNJcJN7i2tBJTrx7nUgg/FUigp1r+vfzMBUFTeFOtHL9MgTk1Rol//qVMpuAqkEf5dkr/1H8XWHTned1Y5QScxBnYqLHcttaynL0atrDMOMECh81VGzKJjb5wJVdSTWPiKYvuFoGgsKtAUYoggWF2UIv0g5gj0USYVasqRc7hzK7KIfMGMWDlfeIDn333/A/S089KTHq1yjR4+XyipP2ynXIbDFmZVa2Z/jRCbqrObA5ywA4W5b89L1Vr4QkXiR31YvuCODMNzfHRKvXN8lGEuNWa15O1w+HO/O+0NJt3xoNNP6vDlC40R1uovWc8icWpxyoWonVxeXTfPlZxl0raSNlfZ0a5F11cS1betcHmQir953yOv+0nyPBZPFLn2gppvXknighYfq0h7IEwUpQnUOVQYuqWxx3JA/SrTeyyfBe0mTKws6NTiZt91qVFisxlZQzwW223MbbN5TXybXTb/q04AboUwNBCio4Wc6zhlSNVGN2VSAD/xODuID084+nx89Cxyvf2cwlWlAxlA93smssDVzqQBseXgSUs06JZOFbFM5JnI7BPMfZJhIdGSFTVkvA/8ljTmdMZEhIXxrLw/8K19zPZuU8bLMK90ym9MjFDyslanBDnJZyfsP/XxFXLwI5x4eqSb59O0cnQ70bMm3idPdJL7MApkWoRa7Ux4u5VxMiwKOs1zkWVdhQVqX0tYFBGTBiT0pKWSnh0tHG3n6Kf8xOl5Lfk30qJtSo+nC51OoAx0oB+TOo/tJprmuUM/jDnU+IFb1Z4m/z7ZVTy5b8A/pRiG5qCo3IzQQWG8tw+KIquHJPtlORjLdsST+3p9W/TIA9V6KgLjU3r7PaebC8W/Pf5TdatZIb9RUJpS+vsLr6RL1A==</source>
+  </file>
+  <file path="version.php" generated-path="version.html" hash="96ce5a37791c8917bec2b5c8df9203ba" package="local_autocompgrade">
+    <docblock line="0">
+      <description>Detalhes da versão do plugin.</description>
+      <long-description>Define a versão atual do plugin, nome e versão mínima do Moodle necessária.</long-description>
+      <tag name="package" line="0" description="local_autocompgrade"/>
+      <tag name="copyright" line="0" description="2017 Instituto Infnet {@link http://infnet.edu.br}"/>
+      <tag name="license" line="0" description="GNU GPL v3 or later" link="http://www.gnu.org/copyleft/gpl.html"/>
+    </docblock>
+    <source>eJyFVE1v2kAQvSPxH+ZQKQQRIInSqvlqaIAEiQAyjhJO0WKP7VXWu+56DUJNf0zVc39F/lhn1w70ELW+gHffvHkzb8bnX7Ikq9c6HfATnkPEBQL9ZkwbUBHcKRXSyQEkxmSnnU7q3ttKxx0b5AIrjI3WiJCryKyZxlPYqAICJkFjyHOj+bIwBDPAZNhRGlIV8mjjKOiwkCFqMAmCQZ3mNrl9uZncww1K1EzArFgKHsCYByhzBEYy7UmeYAjLksiGDK2KeaUChoqYmeFKtgA53WtYoc7pHY7fklSMLVDasTSYseI1qMwG7pPiDQhmdrHtd6rfFRkCl444URnVkxAdVbjmQsASocgxKkTLRRMaHkb+7fTeh95kAQ89z+tN/MUZoU2i6BZXWHLxNBOcqKkqzaTZkPhSwMC7vqWY3tfReOQvqAYYjvzJYD6H4dSDHsx6nj+6vh/3PJjde7PpfNAGmKMVho7hHz2OnE/UxhAN4yLf1b0gc3NSKEJI2ArJ5AD5ivQxCFS2+b9/joUJJWNXa9VIkjaKQCrTgpwknldzt16v27Es3OCJMj7vXFo1zWa9Bk3okz6RILnAnEevvxSECjJRxNy6RZAKF3FJs7MFMVOQtC20RblTBNzep6+/JU+ZRVRWS6o0z19/as4cseO9yljwzGIEeoQKmHhihVGBSrNYsxBLjG2M5nFiAI66h59gJHPDDeHoXyTRwPcrweXz27Jxd9jGsGgv9Y+SoirepnmnNTaBwMh04ky0E5OKsv+zMayO7WC4Ga7XmmRhvRa6VoSNvbvptD8ePI0m/sCb9MZ7+/DyQtOMjf0zi6vXPpS9Obh82xyAC1dB97B70j06A/f5QAgKrVGaqpXbPWv0Ke0pLOi5u+v3Hx/3239xavxWcE3OlZwfuyeHn7tdx+m9XRn7barav9vALYVts5I28wXsvdP9Pcc2LGj/JCN3q9msZDZoIUM36SFnsVTkSZBbiX8ANOaoBA==</source>
+  </file>
+  <file path="gradeassigncompetencies.php" generated-path="gradeassigncompetencies.html" hash="48e4ea62051be54fbe6265c6190ba49a" package="local_autocompgrade">
+    <docblock line="0">
+      <description>Página para forçar manualmente o cálculo de resultados.</description>
+      <long-description>A página contém duas seções:
+1. Um formulário para selecionar um curso e estudantes específicos e forçar
+o cálculo de resultados, caso haja alguma diferença com o que está gravado.
+1. Um relatório com estudantes que estão com as competências atualizadas
+ou não.</long-description>
+      <tag name="package" line="0" description="local_autocompgrade"/>
+      <tag name="copyright" line="0" description="2017 Instituto Infnet {@link http://infnet.edu.br}"/>
+      <tag name="license" line="0" description="GNU GPL v3 or later" link="http://www.gnu.org/copyleft/gpl.html"/>
+    </docblock>
+    <source>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</source>
+  </file>
+  <file path="consistencycheck.php" generated-path="consistencycheck.html" hash="d6219e28dbb3f1ffb7bd179e7e6c2ee3" package="local_autocompgrade">
+    <docblock line="0">
+      <description>Relatório de consistência de competências.</description>
+      <long-description>Relatório para identificar fatores que possam impedir ou interferir com o
+cálculo automático de competências.</long-description>
+      <tag name="package" line="0" description="local_autocompgrade"/>
+      <tag name="copyright" line="0" description="2017 Instituto Infnet {@link http://infnet.edu.br}"/>
+      <tag name="license" line="0" description="GNU GPL v3 or later" link="http://www.gnu.org/copyleft/gpl.html"/>
+    </docblock>
+    <source>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</source>
+  </file>
+  <file path="lang\en\local_autocompgrade.php" generated-path="lang.en.local_autocompgrade.html" hash="c500da35587474658a8fd34e14a99952" package="local_autocompgrade">
+    <docblock line="0">
+      <description>Textos do plugin em inglês.</description>
+      <long-description>Contém os textos utilizados pelo plugin, em inglês.</long-description>
+      <tag name="package" line="0" description="local_autocompgrade"/>
+      <tag name="copyright" line="0" description="2017 Instituto Infnet {@link http://infnet.edu.br}"/>
+      <tag name="license" line="0" description="GNU GPL v3 or later" link="http://www.gnu.org/copyleft/gpl.html"/>
+    </docblock>
+    <source>eJydV+tOG0cU/o/EO5wfkdIiarfNj0pJ2sZFkFiigGyjCLUVGu8e746YndnMxa4b5YHa18iL9cxlLw5gmyAB45lzvnO/+PWvdVkfHgyHMCu5gQUXCPS/ZtqCWsDvSuV08x2U1tYvh8MqfB4oXQw9U2BMNJ5bI4JRC7tiGl/CWjnImASNOTdW87mzRGaByXyoNFQq54t1gKBLJ3PUYEsEi7oyXrj/8PbiGt6iRM0EXLm54Bmc8wylQWCkpr8xJeYwj0Ce5cxrMU1awJkiZGa5kseAnN41LFEb+gwvGiEJ8RiUDijfMOuV16Bqz/gtabwGwWzHO3jA+s7IHLgMwKWqyZ6S4MjCFRcC5gjO4MKJ48BN1PB+PHt3eT2D0cUNvB9NJqOL2c0roraloldcYsTiVS04QZNVmkm7JuWjAqeTk3fEM/ptfD6e3ZANcDaeXZxOp3B2OYERXI0ms/HJ9floAlfXk6vL6ekAYIpeMQwIW3y8CHEiN+ZoGRems/uGgmtIQ5FDyZZIQc6QL0k/Bpmq17vjF1CYULIItiZHkmrjBUhlj8GQiq9T3q1Wq0EhXUg8EfnN8BevzdHR4QEcwQz/topioKAWriD3Y0VBKMTn/7zORBD+nChpP/9bAVHayOAsF/wfltOxRtFwH3/JHrjf1Cy7YwUC/QiVMXHLnFWZqupCsxwjjTde86K0AD9+/8NPMJbGckt0dFpItPDxjeDyrikoHi4HmLvBXH+KEMlAL+YB870AgQs7LGoxKG0loo+vzmH5wgc/5OnhwRGF6fDgmU9JWfzxnGru+V/wM4TDq95DpqShxEWZrbMSs7tIddLdQrgOmeDNraiWMvBGY3z2thPSVtDblp6jSZmNUrmi1G6ueWYaqR1VVwCBDhrCp4rZLWBPZKcp5ypuDBH05TTI4R0SAWxQbEWmlksBiyhn4QxJ2A4+zSpcKX2XqVJpm/Q4a26hud4PpHGXRWozlEFf+GsNHWXrON8VG/odcqjXO7HFfSO6L2SF0n6NCyV1KOOEjVgXikq3oyHuwQ52V93X6MJVcwoFtbH+W6PcTsCNtOuw9sq1RJTc3JVaBJvE1zYKvVLUuEBNJ9yOb1BgZum1QrrWGYWvUDrBz5rr4Ulzvx3MutyHLalDySAj0DQ9tPEUyLT0B0+zwwXGzSue4jmqa7GGVCZbuVaapkmXqNShd+YxBB6ItJvgvgb7xb3xjForTYmXup9WqxTrU//wkiZYaIw0D1M0qYHSIhLaaOLxzZq1eU+jC43887mN4zRsHDQnCGAj/2zCHTyojTWW+jvTec/2pNAGClHSGuJ1aBiiBx5CrVF6bVlm+ZLbtj4SLK136aXVl1T0kz86cFNuyaLsOdJS418E+m0p+QTzTfnhLnrofn2+9Y99/z3aLh6BueU0mbXL/IaXwlwq5ffKRnXyDKT0Jo2FWrXe9wZyTfVmavTWb5q5lxW33ltd7c41srtcrRpVaAegHYGq2ctcclwln7Z53DJ8jbS2CPaV1jLsLy286a0CmkIwGa3sTzDkg6OVLYyqZuw9IsATQkO5Hz6lp6vpCwPmgeKL8d5LidQ/QilFBkgc+4iJPTgN+gjYl9QXtB9eH2P6FMZep4019eRCMi7L0Dy0YiXH7Of5J7n9K1y+gV9il53XO7AoxPfnSOru7UocfgUNqjkzvqVJ+PiMfXoY7Jb6oE/NCBqS9IOjNKBO9Ij4ZifoF1W6Om5Uma/vi4xfZyQVb5qlj23wm9Ot8fXmJPck/wPUUMR4</source>
+  </file>
+  <package name="global" full_name="global"/>
+  <package name="local_autocompgrade" full_name="local_autocompgrade"/>
+  <namespace name="global" full_name="global"/>
+  <namespace name="local_autocompgrade" full_name="local_autocompgrade"/>
+  <deprecated count="0"/>
+</project>

@@ -1,10 +1,27 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 /**
- * Plugin version info
+ * Textos do plugin em inglês.
+ * 
+ * Contém os textos utilizados pelo plugin, em inglês.
  *
  * @package    local_autocompgrade
- * @copyright  2016 Instituto Infnet
- */
+ * @copyright  2017 Instituto Infnet {@link http://infnet.edu.br}
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+*/
 
 $string['and'] = 'and';
 $string['consistencycheck'] = 'Consistency check for automatic competency grading';
@@ -27,7 +44,7 @@ $string['course'] = 'Course';
 $string['error_nogradingrows'] = 'Error: no graded rubrics found for grading or assignment doesn\'t have any linked competencies to grade.';
 $string['error_notstandardscale'] = 'Error: competencies not using standard scale.';
 $string['error_pendingactivities'] = 'Error: an activity linked to the course competencies has not been completed or graded.';
-$string['gradeassigncompetencies'] = 'Grade assignment competencies';
+$string['gradeassigncompetencies'] = 'Force competencies grading';
 $string['gradeassigncompetencies_instruction'] = 'Choose a course and student below to grade their respective competencies.';
 $string['gradeassigncompetencies_linkcompetencybreakdown'] = 'Click here to view the competency breakdown.';
 $string['gradeassigncompetencies_linkcompetencyframework'] = 'Click here to view the competency framework.';
