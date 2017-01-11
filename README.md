@@ -18,7 +18,7 @@ houver.
 4. Conferir o plugin na lista exibida e confirmar a atualização do banco de
 dados do Moodle.
 
-## Uso
+## Usabilidade
 
 Após a instalação do plugin, sempre que uma entrega de tarefa for avaliada ou um
 questionário for respondido e a atividade estiver associada a competências, o
