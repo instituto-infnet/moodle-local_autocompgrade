@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 /**
  * Relatório de consistência de competências.
- * 
+ *
  * Relatório para identificar fatores que possam impedir ou interferir com o
  * cálculo automático de competências.
  *
@@ -418,8 +418,9 @@ if (!empty($table->data)) {
 	echo html_writer::tag('p', get_string('consistencycheck_noresult', 'local_autocompgrade'), array('class' => 'alert alert-success'));
 }
 
+$DB->execute('set session group_concat_max_len = 1000000');
 $consulta = $DB->get_records_sql('
-	select
+    select
 		disciplina.id course,
 		compfwk.id frameworkid,
 		CONCAT(acgc.endyear, "T", acgc.endtrimester) trimestre,
@@ -429,8 +430,8 @@ $consulta = $DB->get_records_sql('
 		bloco.name bloco,
 		disciplina.fullname disciplina,
 		comptpl.templateid,
-		GROUP_CONCAT(distinct CONCAT_WS("-", usr.id, CONCAT_WS(" ", usr.firstname, usr.lastname)) order by usr.firstname, usr.lastname) estudantes,
-		GROUP_CONCAT(distinct CONCAT_WS("-", coh.id, coh.name) order by coh.name, coh.id) coortes
+		GROUP_CONCAT(distinct CONCAT_WS("-", usr.id, CONCAT_WS(" ", usr.firstname, usr.lastname)) order by usr.firstname, usr.lastname separator "|") estudantes,
+		GROUP_CONCAT(distinct CONCAT_WS("-", coh.id, coh.name) order by coh.name, coh.id separator "|") coortes
 	from {local_autocompgrade_courses} acgc
 		join {course} disciplina on disciplina.id = acgc.course
 		join {course_categories} bloco on bloco.id = disciplina.category
@@ -474,7 +475,7 @@ $table->head = array(
 $table->data = array();
 foreach ($consulta as $course => $dados) {
 	$estudantes = array();
-	foreach (explode(',', $dados->estudantes) as $estudante) {
+	foreach (explode('|', $dados->estudantes) as $estudante) {
 		$estudante_array = explode('-', $estudante);
 
 		$estudantes[] = html_writer::link(
@@ -492,22 +493,24 @@ foreach ($consulta as $course => $dados) {
 	}
 
 	$coortes = array();
-	foreach (explode(',', $dados->coortes) as $coorte) {
-		$coorte_array = explode('-', $coorte);
+	if (!empty($dados->coortes)) {
+        foreach (explode('|', $dados->coortes) as $coorte) {
+            $coorte_array = explode('-', $coorte);
 
-		$coortes[] = html_writer::link(
-			new moodle_url(
-				'/cohort/assign.php',
-				array(
-					'id' => $coorte_array[0]
-				)
-			),
-			$coorte_array[1],
-			array(
-				'target' => '_blank'
-			)
-		);
-	}
+            $coortes[] = html_writer::link(
+                new moodle_url(
+                    '/cohort/assign.php',
+                    array(
+                        'id' => $coorte_array[0]
+                    )
+                ),
+                $coorte_array[1],
+                array(
+                    'target' => '_blank'
+                )
+            );
+        }
+    }
 
 	$table->data[] = array(
 		sizeof($table->data) + 1 . '.',
@@ -525,7 +528,7 @@ foreach ($consulta as $course => $dados) {
 			)
 		),
 		html_writer::tag('ol', '<li>' . implode('</li><li>', $estudantes)),
-		html_writer::tag('ol', '<li>' . implode('</li><li>', $coortes))
+        (!empty($coortes))? html_writer::tag('ol', '<li>' . implode('</li><li>', $coortes)) : ''
 	);
 }
 
