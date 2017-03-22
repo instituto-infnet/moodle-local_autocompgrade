@@ -47,7 +47,10 @@ Temporary Items
 .apdisk
 
 # Arquivo de sincronização do pacote de SFTP do Sublime Text
-sftp-config.json
+*sftp-config.json*
 
 # Pasta de projeto do NetBeans
 /nbproject/
+
+# Arquivo com credenciais utilizadas
+credentials.php
