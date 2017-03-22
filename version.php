@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 /**
  * Detalhes da versão do plugin.
- * 
+ *
  * Define a versão atual do plugin, nome e versão mínima do Moodle necessária.
  *
  * @package    local_autocompgrade
@@ -26,6 +26,6 @@
 defined('MOODLE_INTERNAL') || die();
 
 
-$plugin->version   = 2017010502; // The current plugin version (Date: YYYYMMDDXX).
+$plugin->version   = 2017032200; // The current plugin version (Date: YYYYMMDDXX).
 $plugin->requires  = 2016051900; // Requires this Moodle version.
 $plugin->component = 'local_autocompgrade'; // Full name of the plugin (used for diagnostics).
