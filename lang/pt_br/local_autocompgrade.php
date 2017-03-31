@@ -17,7 +17,7 @@
  * Textos do plugin em português do Brasil.
  *
  * Contém os textos utilizados pelo plugin, em português do Brasil.
- * 
+ *
  * @package    local_autocompgrade
  * @copyright  2017 Instituto Infnet {@link http://infnet.edu.br}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -27,13 +27,13 @@ $string['and'] = 'e';
 $string['consistencycheck'] = 'Relatório de consistência para avaliação automática de competências';
 $string['consistencycheck_competencieswithoutenoughrubrics'] = 'Competências com quantidade insuficente de rubricas';
 $string['consistencycheck_competencieswithoutrubrics'] = 'Competências sem rubricas';
-$string['consistencycheck_coursesmissingcompetencies'] = 'Cursos com competências faltando';
+$string['consistencycheck_coursesmissingcompetencies'] = 'Disciplinas com competências não associadas';
 $string['consistencycheck_filter'] = 'Filtrar disciplinas';
 $string['consistencycheck_frameworkcohorts'] = 'Coortes do framework';
 $string['consistencycheck_frameworkswithouttemplate'] = 'Frameworks de competência sem templates';
 $string['consistencycheck_modulesmissingcompetencies'] = 'Avaliações com competências faltando';
 $string['consistencycheck_noresult'] = 'Sem inconsistências.';
-$string['consistencycheck_numcompetencies'] = 'Quantidade de competências faltando';
+$string['consistencycheck_numcompetencies'] = 'Qtd. de competências';
 $string['consistencycheck_numrubrics'] = 'Quantidade de rubricas';
 $string['consistencycheck_rubricswithoutcompetency'] = 'Rubricas sem indicação de competência';
 $string['consistencycheck_selecttrimestercategory'] = 'Trimestre/Bloco';
