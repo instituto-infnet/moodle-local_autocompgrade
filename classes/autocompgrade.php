@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 /**
  * Arquivo contendo a principal classe do plugin.
- * 
+ *
  * Contém a classe que realiza as principais ações do plugin.
  *
  * @package    local_autocompgrade
@@ -33,7 +33,7 @@ require_once(__DIR__ . '/competency_result.php');
 
 /**
  * Classe principal do plugin.
- * 
+ *
  * Calcula e atualiza automaticamente os conceitos de competências de estudantes
  * em cursos, conforme as regras do modelo PBL+CBL utilizado pelo Instituto
  * Infnet.
@@ -198,18 +198,18 @@ class autocompgrade {
 		}
 	}
 
-	
+
         /**
          * Atualiza as competências de um estudante e curso específicos e
          * retorna o código HTML de uma tag div contendo a mensagem de retorno.
-         * 
+         *
          * @param int $courseid O id do curso que terá as competências
          * avaliadas.
 	 * @param int $studentid O id de estudante que terá as competências
          * avaliadas.
          * @return string Código HTML de uma div contendo a mensagem de retorno,
          * indicando sucesso ou erro e incluindo link para página relevante.
-         * 
+         *
          */
         public static function gradeassigncompetencies_printableresult($courseid, $studentid) {
 		$result = self::gradeassigncompetencies($courseid, $studentid);
@@ -267,7 +267,7 @@ class autocompgrade {
 	/**
          * Atualiza as competências de um estudante e curso específicos,
          * a partir de um evento de tarefa avaliada ou questionário respondido.
-         * 
+         *
          * @param \core\event\base $event O evento que foi disparado. A execução
          * é realizada apenas se for um dos seguintes tipos de evento:
          * - \mod_assign\event\submission_graded
@@ -370,7 +370,8 @@ class autocompgrade {
 						and ag.id = (
 							select ag_maisrecente.id
 							from {assign_grades} ag_maisrecente
-							where ag_maisrecente.assignment = ag.assignment
+							where ag_maisrecente.grade > -1
+                                and ag_maisrecente.assignment = ag.assignment
 								and ag_maisrecente.userid = ag.userid
 							order by ag_maisrecente.timemodified desc
 							limit 1

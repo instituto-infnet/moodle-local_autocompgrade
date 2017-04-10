@@ -153,8 +153,9 @@ $courses = $DB->get_records_sql('
 						where ag.id = (
 							select ag_maisrecente.id
 							from {assign_grades} ag_maisrecente
-							where ag_maisrecente.assignment = asg.id
+							where ag_maisrecente.grade > -1
 								and ag_maisrecente.userid = ag.userid
+                                and ag_maisrecente.assignment = asg.id
 							order by ag_maisrecente.timemodified desc
 							limit 1
 						)
