@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 /**
  * Textos do plugin em inglês.
- * 
+ *
  * Contém os textos utilizados pelo plugin, em inglês.
  *
  * @package    local_autocompgrade
@@ -60,5 +60,6 @@ $string['gradeassigncompetencies_updatedgradesheader'] = 'Updated grades';
 $string['gradenote'] = 'Competency graded automaticatically based on {$a}';
 $string['gradenote_hasquiz'] = 'quiz questions';
 $string['gradenote_rubricsgrader'] = 'rubrics, graded by {$a}';
+$string['history'] = 'Course results history';
 $string['pluginname'] = 'Automatic competency grade';
 $string['students'] = 'Students';

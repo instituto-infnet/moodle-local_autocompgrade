@@ -61,5 +61,6 @@ $string['gradeassigncompetencies_updatedgradesheader'] = 'Competências atualiza
 $string['gradenote'] = 'Competência avaliada automaticamente com base em {$a}';
 $string['gradenote_hasquiz'] = 'questões objetivas';
 $string['gradenote_rubricsgrader'] = 'rubricas, corrigidas por {$a}';
+$string['history'] = 'Histórico de resultados fechados';
 $string['pluginname'] = 'Avaliação automática de competências';
 $string['students'] = 'Estudantes';

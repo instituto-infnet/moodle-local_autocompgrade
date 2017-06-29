@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 /**
  * Script de atualização do banco de dados quando o plugin for atualizado.
- * 
+ *
  * Ao atualizar o plugin, realiza as alterações necessárias na tabela do plugin.
  *
  * @package    local_autocompgrade
@@ -28,7 +28,7 @@ defined('MOODLE_INTERNAL') || die();
 /**
  * Atualiza a tabela local_autocompgrade_courses de acordo com a versão mais
  * atual do plugin.
- * 
+ *
  * @param string $oldversion Versão do plugin antes de ser atualizado.
  * @return bool Verdadeiro quando a atualização for realizada sem erros.
  */
@@ -82,6 +82,57 @@ function xmldb_local_autocompgrade_upgrade($oldversion) {
 		// Autocompgrade savepoint reached.
 		upgrade_plugin_savepoint(true, 2016120900, 'local', 'autocompgrade');
 	}
+
+    if ($oldversion < 2017050801) {
+
+        // Define table local_autocompgrade_history to be created.
+        $table = new xmldb_table('local_autocompgrade_history');
+
+        // Adding fields to table local_autocompgrade_history.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('courseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('currentresults', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('usercreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('usermodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+
+        // Adding keys to table local_autocompgrade_history.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+        $table->add_key('courseid', XMLDB_KEY_FOREIGN, array('courseid'), 'course', array('id'));
+
+        // Conditionally launch create table for local_autocompgrade_history.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+                // Define table local_autocompgrade_histcomp to be created.
+        $table = new xmldb_table('local_autocompgrade_histcomp');
+
+        // Adding fields to table local_autocompgrade_histcomp.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('historyid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('usercompcourseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('proficiency', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('grade', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+
+        // Adding keys to table local_autocompgrade_histcomp.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+        $table->add_key('historyid', XMLDB_KEY_FOREIGN, array('historyid'), 'local_autocompgrade_history', array('id'));
+        $table->add_key('usercompcourseid', XMLDB_KEY_FOREIGN, array('usercompcourseid'), 'competency_usercompcourse', array('id'));
+
+        // Adding indexes to table local_autocompgrade_histcomp.
+        $table->add_index('historyidusercompcourse', XMLDB_INDEX_UNIQUE, array('historyid', 'usercompcourseid'));
+
+        // Conditionally launch create table for local_autocompgrade_histcomp.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Autocompgrade savepoint reached.
+        upgrade_plugin_savepoint(true, 2017050801, 'local', 'autocompgrade');
+    }
+
 
 	return true;
 }
