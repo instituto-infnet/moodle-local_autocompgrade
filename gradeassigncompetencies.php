@@ -155,7 +155,7 @@ $courses = $DB->get_records_sql('
 							from {assign_grades} ag_maisrecente
 							where ag_maisrecente.grade > -1
 								and ag_maisrecente.userid = ag.userid
-                                and ag_maisrecente.assignment = asg.id
+								and ag_maisrecente.assignment = asg.id
 							order by ag_maisrecente.timemodified desc
 							limit 1
 						)
@@ -198,6 +198,7 @@ $courses = $DB->get_records_sql('
 				where resultados.course = acgc.course
 					and resultados.userid = usr.id
 					and resultados.competencyid = ccomp.competencyid
+					and resultados.timemodified > COALESCE(usercomp.timemodified, 0)
 			) competencia_atualizada
 		from {local_autocompgrade_courses} acgc
 			join {course} disciplina on disciplina.id = acgc.course

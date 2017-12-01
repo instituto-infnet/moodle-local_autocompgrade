@@ -52,5 +52,10 @@ Temporary Items
 # Pasta de projeto do NetBeans
 /nbproject/
 
+# Arquivos de projeto do Eclipse
+.settings
+.project
+.buildpath
+
 # Arquivo com credenciais utilizadas
 credentials.php
