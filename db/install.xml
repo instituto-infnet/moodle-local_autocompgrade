@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <XMLDB PATH="local/autocompgrade/db" VERSION="20161209" COMMENT="XMLDB file for Moodle local/autocompgrade"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
->
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd">
   <TABLES>
     <TABLE NAME="local_autocompgrade_courses" COMMENT="Courses to be listed in the &quot;Grade assignment competencies&quot;, along with any properties that might help group them">
       <FIELDS>
@@ -16,6 +14,28 @@
       </KEYS>
       <INDEXES>
         <INDEX NAME="course" UNIQUE="true" FIELDS="course"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="local_autocompgrade_attend" COMMENT="Attendance data for courses without an attendance module instance.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Course ID"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="User ID"/>
+        <FIELD NAME="present" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Number of classes in the course the user was present."/>
+        <FIELD NAME="absent" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Number of classes in the course the user was absent."/>
+        <FIELD NAME="excused" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Number of classes in the course the user was excused."/>
+        <FIELD NAME="late" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Number of classes in the course the user was late."/>
+        <FIELD NAME="finalattendance" TYPE="number" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Final percentage of attendance for the user in the course."/>
+        <FIELD NAME="approved" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Whether the user had approval for attendance in the course."/>
+        <FIELD NAME="nodetaileddata" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Whether the approval was based on detailed present/absent/excused data."/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+        <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="courseiduserid" UNIQUE="true" FIELDS="courseid, userid"/>
       </INDEXES>
     </TABLE>
   </TABLES>

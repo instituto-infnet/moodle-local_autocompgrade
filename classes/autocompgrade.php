@@ -46,17 +46,17 @@ class autocompgrade {
 
 	/**
 	 * Calcula os conceitos de cada competência para um estudante e curso
-         * específicos e atualiza o resultado, se for diferente do que já está
-         * gravado.
+		 * específicos e atualiza o resultado, se for diferente do que já está
+		 * gravado.
 	 *
 	 * @param int $courseid O id do curso que terá as competências
-         * avaliadas.
+		 * avaliadas.
 	 * @param int $studentid O id de estudante que terá as competências
-         * avaliadas.
+		 * avaliadas.
 	 * @param bool $noreturn Verdadeiro para retornar void, evitando erros
-         * nas telas em que não é esperado retorno.
+		 * nas telas em que não é esperado retorno.
 	 * @return array|void Se $noreturn for falso, array com chaves msg e
-         * params, contendo erros e informações sobre a execução.
+		 * params, contendo erros e informações sobre a execução.
 	 */
 	public static function gradeassigncompetencies($courseid, $studentid, $noreturn = false) {
 		global $CFG;
@@ -69,9 +69,18 @@ class autocompgrade {
 			);
 		}
 
+		if (!$noreturn) {
+			// print_object($courseid);
+			// print_object($studentid);
+		}
+
 		$result = $DB->get_records_sql(self::get_query_string('student_course_activities'), array(
 			$courseid, $studentid
 		));
+
+		if (!$noreturn) {
+			// print_object($result);
+		}
 
 		$activities = array();
 		foreach ($result as $cmid => $values) {
@@ -95,6 +104,10 @@ class autocompgrade {
 				$result = $DB->get_records_sql(self::get_query_string('activities_items_' . $module), array(
 					$courseid, $studentid
 				));
+
+				if (!$noreturn) {
+					// print_object($result);
+				}
 
 				foreach ($result as $competencyid => $values) {
 					if ($values->scale !== 'Escala INFNET') {
@@ -122,6 +135,10 @@ class autocompgrade {
 					}
 				}
 			}
+		}
+
+		if (!$noreturn) {
+			// print_object($competenciesresults);
 		}
 
 		$currentgrades = $DB->get_records('competency_usercompcourse', array('courseid' => $courseid, 'userid' => $studentid));
@@ -199,19 +216,19 @@ class autocompgrade {
 	}
 
 
-        /**
-         * Atualiza as competências de um estudante e curso específicos e
-         * retorna o código HTML de uma tag div contendo a mensagem de retorno.
-         *
-         * @param int $courseid O id do curso que terá as competências
-         * avaliadas.
+		/**
+		 * Atualiza as competências de um estudante e curso específicos e
+		 * retorna o código HTML de uma tag div contendo a mensagem de retorno.
+		 *
+		 * @param int $courseid O id do curso que terá as competências
+		 * avaliadas.
 	 * @param int $studentid O id de estudante que terá as competências
-         * avaliadas.
-         * @return string Código HTML de uma div contendo a mensagem de retorno,
-         * indicando sucesso ou erro e incluindo link para página relevante.
-         *
-         */
-        public static function gradeassigncompetencies_printableresult($courseid, $studentid) {
+		 * avaliadas.
+		 * @return string Código HTML de uma div contendo a mensagem de retorno,
+		 * indicando sucesso ou erro e incluindo link para página relevante.
+		 *
+		 */
+		public static function gradeassigncompetencies_printableresult($courseid, $studentid) {
 		$result = self::gradeassigncompetencies($courseid, $studentid);
 
 		$result_content = \html_writer::tag('p', get_string($result['msg'], 'local_autocompgrade'));
@@ -265,15 +282,15 @@ class autocompgrade {
 	}
 
 	/**
-         * Atualiza as competências de um estudante e curso específicos,
-         * a partir de um evento de tarefa avaliada ou questionário respondido.
-         *
-         * @param \core\event\base $event O evento que foi disparado. A execução
-         * é realizada apenas se for um dos seguintes tipos de evento:
-         * - \mod_assign\event\submission_graded
-         * - \mod_quiz\event\attempt_submitted
-         */
-        public static function gradeassigncompetencies_event(\core\event\base  $event) {
+		 * Atualiza as competências de um estudante e curso específicos,
+		 * a partir de um evento de tarefa avaliada ou questionário respondido.
+		 *
+		 * @param \core\event\base $event O evento que foi disparado. A execução
+		 * é realizada apenas se for um dos seguintes tipos de evento:
+		 * - \mod_assign\event\submission_graded
+		 * - \mod_quiz\event\attempt_submitted
+		 */
+		public static function gradeassigncompetencies_event(\core\event\base  $event) {
 		if (in_array($event->eventname, array('\mod_assign\event\submission_graded', '\mod_quiz\event\attempt_submitted'))) {
 			self::gradeassigncompetencies(
 				$event->courseid,
@@ -288,7 +305,7 @@ class autocompgrade {
 	 * Retorna o comando correspondente ao nome fornecido.
 	 *
 	 * @param string $queryname O nome do comando SQL que deve ser
-         * retornado.
+		 * retornado.
 	 * @return string O comando SQL correspondente ao nome informado.
 	 */
 	private static function get_query_string($queryname) {
@@ -341,7 +358,7 @@ class autocompgrade {
 							join {competency_modulecomp} cmcomp on cmcomp.competencyid = ccomp.competencyid
 						where ccomp.courseid = c.id
 							and cmcomp.cmid = cm.id
-					)
+					) and cm.visible = 1
 				group by cm.id
 			';
 		} else if ($queryname === 'activities_items_assign') {
@@ -371,7 +388,7 @@ class autocompgrade {
 							select ag_maisrecente.id
 							from {assign_grades} ag_maisrecente
 							where ag_maisrecente.grade > -1
-                                and ag_maisrecente.assignment = ag.assignment
+								and ag_maisrecente.assignment = ag.assignment
 								and ag_maisrecente.userid = ag.userid
 							order by ag_maisrecente.timemodified desc
 							limit 1
@@ -385,6 +402,7 @@ class autocompgrade {
 					join {scale} scale on scale.id = comp_fwk.scaleid
 				where cm.course = ?
 					and usr.id = ?
+					and cm.visible = 1
 				group by comp.id
 				order by CAST(comp.idnumber as unsigned)
 			';
@@ -428,6 +446,7 @@ class autocompgrade {
 						)
 				where cm.course = ?
 					and qa.userid = ?
+					and cm.visible = 1
 				group by comp.id
 				order by CAST(comp.idnumber as unsigned)
 			';

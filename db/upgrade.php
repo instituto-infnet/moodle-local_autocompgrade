@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 /**
  * Script de atualização do banco de dados quando o plugin for atualizado.
- * 
+ *
  * Ao atualizar o plugin, realiza as alterações necessárias na tabela do plugin.
  *
  * @package    local_autocompgrade
@@ -28,7 +28,7 @@ defined('MOODLE_INTERNAL') || die();
 /**
  * Atualiza a tabela local_autocompgrade_courses de acordo com a versão mais
  * atual do plugin.
- * 
+ *
  * @param string $oldversion Versão do plugin antes de ser atualizado.
  * @return bool Verdadeiro quando a atualização for realizada sem erros.
  */
@@ -81,6 +81,40 @@ function xmldb_local_autocompgrade_upgrade($oldversion) {
 
 		// Autocompgrade savepoint reached.
 		upgrade_plugin_savepoint(true, 2016120900, 'local', 'autocompgrade');
+	}
+
+	if ($oldversion < 2019072900) {
+
+        // Define table local_autocompgrade_attend to be created.
+        $table = new xmldb_table('local_autocompgrade_attend');
+
+        // Adding fields to table local_autocompgrade_attend.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('courseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('present', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('absent', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('excused', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('late', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('finalattendance', XMLDB_TYPE_NUMBER, '10, 5', null, null, null, null);
+        $table->add_field('approved', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('nodetaileddata', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0');
+
+		// Adding keys to table local_autocompgrade_attend.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('courseid', XMLDB_KEY_FOREIGN, ['courseid'], 'course', ['id']);
+        $table->add_key('userid', XMLDB_KEY_FOREIGN, ['userid'], 'user', ['id']);
+
+        // Adding indexes to table local_autocompgrade_attend.
+        $table->add_index('courseiduserid', XMLDB_INDEX_UNIQUE, ['courseid', 'userid']);
+
+        // Conditionally launch create table for local_autocompgrade_attend.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+		// Autocompgrade savepoint reached.
+		upgrade_plugin_savepoint(true, 2019061700, 'local', 'autocompgrade');
 	}
 
 	return true;

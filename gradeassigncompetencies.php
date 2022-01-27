@@ -38,6 +38,8 @@ $courses = optional_param('disciplinas', null, PARAM_RAW);
 $pageparams = array(
 	'course' => optional_param('course', null, PARAM_INT),
 	'userid' => optional_param('userid', null, PARAM_INT),
+	'relatorios' => optional_param('relatorios', false, PARAM_BOOL),
+	'ignorar_data' => optional_param('ignorar_data', false, PARAM_BOOL)
 );
 $atualizar_todas = optional_param('atualizar_todas', null, PARAM_BOOL);
 
@@ -74,9 +76,10 @@ echo $OUTPUT->header() . $OUTPUT->heading(get_string('gradeassigncompetencies', 
 
 $pageparams['disciplinas'] = $courses;
 
-if (isset($pageparams['disciplinas']) && !in_array(0, $pageparams)) {
+if (isset($pageparams['disciplinas']) /*&& !in_array(0, $pageparams)*/) {
 	echo local_autocompgrade\autocompgrade::gradeassigncompetencies_printableresult($pageparams['disciplinas'][$indexcourseid], $pageparams['disciplinas'][$indexuserid]);
 }
+
 $courses = $DB->get_records_sql('
 	select CONCAT(disciplinas.disciplinaid, "-", disciplinas.estudanteid) course_usrid,
 		CONCAT(disciplinas.endyear, "T", disciplinas.endtrimester) trimestre,
@@ -110,7 +113,6 @@ $courses = $DB->get_records_sql('
 			disciplina.fullname disciplina,
 			usr.firstname,
 			usr.lastname,
-			ccomp.competencyid,
 			(
 				select
 					case
@@ -158,7 +160,7 @@ $courses = $DB->get_records_sql('
 								and ag_maisrecente.assignment = asg.id
 							order by ag_maisrecente.timemodified desc
 							limit 1
-						)
+						) and cm.visible = 1
 
 						union all
 
@@ -191,21 +193,27 @@ $courses = $DB->get_records_sql('
 									order by sortqas.timecreated desc
 									limit 1
 								)
+						where cm.visible = 1
 					) resultados
 				)
 					left join {competency_usercompcourse} usercomp on usercomp.competencyid = resultados.competencyid
 						and usercomp.userid = resultados.userid
+						and usercomp.courseid = resultados.course
 				where resultados.course = acgc.course
 					and resultados.userid = usr.id
 					and resultados.competencyid = ccomp.competencyid
-					and resultados.timemodified > COALESCE(usercomp.timemodified, 0)
+					and (? = 1 or resultados.timemodified > COALESCE(usercomp.timemodified, 0))
 			) competencia_atualizada
 		from {local_autocompgrade_courses} acgc
 			join {course} disciplina on disciplina.id = acgc.course
 			join {course_categories} bloco on bloco.id = disciplina.category
 			join {course_categories} classe on classe.id = bloco.parent
 			join {course_categories} programa on programa.id = classe.parent
-			join {course_categories} escola on escola.id = programa.parent
+				and (
+					programa.parent is not null
+					or programa.name like "%reavalia%"
+				)
+			left join {course_categories} escola on escola .id = programa.parent
 			join {competency_coursecomp} ccomp on ccomp.courseid = acgc.course
 			join {context} ctx on ctx.instanceid = acgc.course
 				and ctx.contextlevel = 50
@@ -213,6 +221,7 @@ $courses = $DB->get_records_sql('
 			join {role} r on r.id = ra.roleid
 				and r.shortname = "student"
 			join {user} usr on usr.id = ra.userid
+		where acgc.course = COALESCE(?, acgc.course)
 		group by acgc.course,
 			usr.id,
 			ccomp.competencyid
@@ -226,7 +235,7 @@ $courses = $DB->get_records_sql('
 		disciplinas.bloco,
 		disciplinas.disciplina,
 		estudante
-');
+', array((int)$pageparams['ignorar_data'], $pageparams['course']));
 
 $selectoptions = array();
 $selectoptions['trimestres'] = array();
@@ -314,7 +323,12 @@ foreach ($courses as $dados) {
 		$dados->competenciasatualizadas
 	);
 
-	if ($atualizar_todas === 1 && $dados->competenciasatualizadas === 'Não' && $contagem < 100) {
+	if (
+		$atualizar_todas === 1
+		&& $dados->competenciasatualizadas === 'Não'
+		&& $contagem < 100
+		&& (!isset($pageparams['course']) || $pageparams['course'] == $dados->disciplinaid)
+	) {
 		$result = local_autocompgrade\autocompgrade::gradeassigncompetencies_printableresult($dados->disciplinaid, $dados->estudanteid);
 
 		echo $result;
@@ -333,28 +347,30 @@ $mform = new gradeassigncompetencies_form(null, $pageparams);
 
 $mform->display();
 
-$tablehead = array(
-	get_string('gradeassigncompetencies_submit', 'local_autocompgrade'),
-	'#',
-	get_string('course', 'local_autocompgrade'),
-	get_string('gradeassigncompetencies_student', 'local_autocompgrade'),
-	get_string('gradeassigncompetencies_updatedgradesheader', 'local_autocompgrade')
-);
+if ($pageparams['relatorios'] !== false) {
+	$tablehead = array(
+		get_string('gradeassigncompetencies_submit', 'local_autocompgrade'),
+		'#',
+		get_string('course', 'local_autocompgrade'),
+		get_string('gradeassigncompetencies_student', 'local_autocompgrade'),
+		get_string('gradeassigncompetencies_updatedgradesheader', 'local_autocompgrade')
+	);
 
-echo html_writer::tag('h3', get_string('gradeassigncompetencies_notupdatedgrades', 'local_autocompgrade'));
+	echo html_writer::tag('h3', get_string('gradeassigncompetencies_notupdatedgrades', 'local_autocompgrade'));
 
-$table = new html_table();
-$table->head = $tablehead;
-$table->data = $tabledatadesatualizadas;
+	$table = new html_table();
+	$table->head = $tablehead;
+	$table->data = $tabledatadesatualizadas;
 
-echo html_writer::table($table);
+	echo html_writer::table($table);
 
-echo html_writer::tag('h3', get_string('gradeassigncompetencies_updatedgrades', 'local_autocompgrade'));
+	echo html_writer::tag('h3', get_string('gradeassigncompetencies_updatedgrades', 'local_autocompgrade'));
 
-$table = new html_table();
-$table->head = $tablehead;
-$table->data = $tabledataatualizadas;
+	$table = new html_table();
+	$table->head = $tablehead;
+	$table->data = $tabledataatualizadas;
 
-echo html_writer::table($table);
+	echo html_writer::table($table);
+}
 
 echo $OUTPUT->footer();

@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 /**
  * Página de configurações do plugin.
- * 
+ *
  * Inclui as páginas do plugin no menu lateral de administração do site, dentro
  * do item Competências.
  *
@@ -25,9 +25,10 @@
 */
 defined('MOODLE_INTERNAL') || die;
 
+$context = context_system::instance();
 $settings = null;
 
-if (is_siteadmin()) {
+if (has_capability('moodle/competency:competencymanage', $context)) {
 	$ADMIN->add('competencies', new admin_category('local_autocompgrade', get_string('pluginname', 'local_autocompgrade')));
 
 	$ADMIN->add(
