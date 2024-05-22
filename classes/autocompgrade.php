@@ -144,7 +144,7 @@ class autocompgrade {
 		$currentgrades = $DB->get_records('competency_usercompcourse', array('courseid' => $courseid, 'userid' => $studentid));
 
 		foreach ($currentgrades as $usercompcourseid => $values) {
-			if (isset($values->grade) && isset($competenciesresults[$values->competencyid]) && $values->grade == $competenciesresults[$values->competencyid]->get_grade('notLate','0')) {
+			if (isset($values->grade) && isset($competenciesresults[$values->competencyid]) && $values->grade == $competenciesresults[$values->competencyid]->get_grade('notLate','0',false)) {
 				unset($competenciesresults[$values->competencyid]);
 			}
 		}
@@ -170,11 +170,13 @@ class autocompgrade {
 						
 			$isLate = $submissionDetails['isLate'] ? "late":"notLate";
 
+			$hasLateTP = self::checkStudentTPSubmission($firstUserId, $firstCurrentGrade->courseid);
+
 			$secondAttempt = false;
 			foreach ($competenciesresults as $competencyid => $competencyresult) {
 				$params['competencyid'] = $competencyid;
-				$params['grade'] = $competencyresult->get_grade($isLate,$submissionDetails['currentAttempt']);
-				$params['note'] = $competencyresult->get_grade_note($isLate,$submissionDetails['currentAttempt']);
+				$params['grade'] = $competencyresult->get_grade($isLate,$submissionDetails['currentAttempt'],$hasLateTP);
+				$params['note'] = $competencyresult->get_grade_note($isLate,$submissionDetails['currentAttempt'],$hasLateTP);
 
 				if ((intval($params['grade']) < 2)AND($isLate == 'notLate')AND($submissionDetails['currentAttempt'] == '0')) {
 					$secondAttempt = true;
@@ -235,6 +237,47 @@ class autocompgrade {
 			return;
 		}
 	}
+
+	function checkStudentTPSubmission($studentid, $courseid) {
+        global $DB;
+    
+        $sql = "SELECT 
+                a.id AS assign_id,
+                a.name AS assign_name,
+                a.duedate AS assign_duedate,
+                asb.timecreated AS submission_date,
+                CASE
+                    WHEN asb.status = 'submitted' THEN 'Yes'
+                    ELSE 'No'
+                END AS submitted
+            FROM 
+                {assign} a
+            LEFT JOIN 
+                {assign_submission} asb ON asb.assignment = a.id AND asb.userid = ?
+            WHERE 
+                a.name LIKE 'Teste de performance%' AND
+                a.course = ? 
+                
+            ORDER BY 
+                a.name;";
+    
+        $params = [
+            'userid' => $studentid,
+            'courseid' => $courseid
+        ];
+    
+        $results = $DB->get_records_sql($sql, $params);
+        
+        $hasLateTP = false;
+        foreach ($results as $result) {
+            if ($result->submitted == "Yes") {                
+                $hasLateTP = $result->submission_date > $result->assign_duedate? true : false;
+                if($hasLateTP)
+					return $hasLateTP;
+            }            
+        }
+        return $hasLateTP;
+    }
 
 	/**
      * Update the grade and allow the second attempt for a student.
