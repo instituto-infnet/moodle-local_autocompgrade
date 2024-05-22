@@ -80,13 +80,13 @@ class competency_result {
          * 3 = Demonstrou com louvor (>= 75%, < 100%) /
          * 4 = Demonstrou com máximo louvor (100%)
          */
-        public function get_grade() {
+        public function get_grade($isLate,$attempt) {
 		$gradedrightpercentage = ($this->numquestions > 0) ? $this->numgradedright / $this->numquestions : 0;
 		$grade = 1;
 
-		if ($gradedrightpercentage === 1) {
+		if (($gradedrightpercentage === 1)AND($isLate == 'notLate')AND($attempt == '0')) {
 			$grade = 4;
-		} else if ($gradedrightpercentage >= 0.75) {
+		} else if (($gradedrightpercentage >= 0.75)AND($isLate == 'notLate')AND($attempt == '0')) {
 			$grade = 3;
 		} else if ($gradedrightpercentage >= 0.5) {
 			$grade = 2;
@@ -102,7 +102,7 @@ class competency_result {
          * 
          * @return string Texto do comentário.
          */
-        public function get_grade_note() {
+        public function get_grade_note($isLate,$attempt) {
 		$notesuffix = '';
 
 		if ($this->hasquiz === true) {
@@ -122,7 +122,8 @@ class competency_result {
 				)
 			);
 		}
-
-		return get_string('gradenote', 'local_autocompgrade', $notesuffix . '.');
+                $msgLate = $isLate == 'late'? ' Nota rebaixada devido a entrega em atraso.':'';
+                $msgLate .= $attempt == '1'? ' Nota rebaixada devido ser a entrega da segunda tentativa.':'';
+		return get_string('gradenote', 'local_autocompgrade', $notesuffix . '.') . $msgLate;
 	}
 }

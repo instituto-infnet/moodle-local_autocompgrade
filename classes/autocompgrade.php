@@ -77,7 +77,7 @@ class autocompgrade {
 		$result = $DB->get_records_sql(self::get_query_string('student_course_activities'), array(
 			$courseid, $studentid
 		));
-
+		$studentActivities = $result;
 		if (!$noreturn) {
 			// print_object($result);
 		}
@@ -144,7 +144,7 @@ class autocompgrade {
 		$currentgrades = $DB->get_records('competency_usercompcourse', array('courseid' => $courseid, 'userid' => $studentid));
 
 		foreach ($currentgrades as $usercompcourseid => $values) {
-			if (isset($values->grade) && isset($competenciesresults[$values->competencyid]) && $values->grade == $competenciesresults[$values->competencyid]->get_grade()) {
+			if (isset($values->grade) && isset($competenciesresults[$values->competencyid]) && $values->grade == $competenciesresults[$values->competencyid]->get_grade('notLate','0')) {
 				unset($competenciesresults[$values->competencyid]);
 			}
 		}
@@ -158,11 +158,27 @@ class autocompgrade {
 			);
 
 			$mh = curl_multi_init();
+					
+			// Retrieve the first `userid` from `Currentgrades` without using foreach
+			$firstCurrentGrade = reset($currentgrades);
+			$firstUserId = $firstCurrentGrade ? $firstCurrentGrade->userid : null;
 
+			// Retrieve the first value in `Activities` || $activities is the id of the table course_module
+			$firstActivityId = !empty($activities['assign']) ? $activities['assign'][0] : null;
+			
+			$submissionDetails = self::getSubmissionDetails($firstActivityId, $firstUserId);
+						
+			$isLate = $submissionDetails['isLate'] ? "late":"notLate";
+
+			$secondAttempt = false;
 			foreach ($competenciesresults as $competencyid => $competencyresult) {
 				$params['competencyid'] = $competencyid;
-				$params['grade'] = $competencyresult->get_grade();
-				$params['note'] = $competencyresult->get_grade_note();
+				$params['grade'] = $competencyresult->get_grade($isLate,$submissionDetails['currentAttempt']);
+				$params['note'] = $competencyresult->get_grade_note($isLate,$submissionDetails['currentAttempt']);
+
+				if ((intval($params['grade']) < 2)AND($isLate == 'notLate')AND($submissionDetails['currentAttempt'] == '0')) {
+					$secondAttempt = true;
+				}
 
 				$ch[$row] = curl_init(
 					$CFG->wwwroot .
@@ -198,6 +214,11 @@ class autocompgrade {
 			}
 
 			curl_multi_close($mh);
+			
+			if($secondAttempt){
+				self::update_grade_and_reopen_attempt($submissionDetails['assignId'], $firstUserId, $params['grade']);
+			}
+
 		} else {
 			if (!$noreturn) {
 				$return['msg'] = 'error_nogradingrows';
@@ -215,20 +236,97 @@ class autocompgrade {
 		}
 	}
 
+	/**
+     * Update the grade and allow the second attempt for a student.
+     *
+     * @param int $assignid The assignment ID.
+     * @param int $userid The student ID.
+     * @param float $grade The grade value.
+     * @return bool True if the attempt was successfully added, false otherwise.
+     */
+    function update_grade_and_reopen_attempt($assignid, $userid, $grade) {
+        global $DB,$USER;
 
-		/**
-		 * Atualiza as competências de um estudante e curso específicos e
-		 * retorna o código HTML de uma tag div contendo a mensagem de retorno.
-		 *
-		 * @param int $courseid O id do curso que terá as competências
-		 * avaliadas.
-	 * @param int $studentid O id de estudante que terá as competências
-		 * avaliadas.
-		 * @return string Código HTML de uma div contendo a mensagem de retorno,
-		 * indicando sucesso ou erro e incluindo link para página relevante.
-		 *
-		 */
-		public static function gradeassigncompetencies_printableresult($courseid, $studentid) {
+        // Get the course module for the assignment.
+        $cm = get_coursemodule_from_instance('assign', $assignid, 0, false, MUST_EXIST);
+        $context = \context_module::instance($cm->id);
+
+        // Create an instance of the assign class.
+        $assign = new \assign($context, $cm, $cm->course);
+
+        // Get the existing grade record.
+        $gradeRecord = $DB->get_record('assign_grades', ['assignment' => $assignid, 'userid' => $userid], '*', MUST_EXIST);
+
+        // Update the grade value.
+        $gradeRecord->grade = $grade;
+        $gradeRecord->grader = $USER->id;
+
+        // Update the grade and reopen attempt if required.
+        if ($assign->update_grade($gradeRecord, true)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+	private static function getSubmissionDetails($coursemoduleid, $studentid) {
+        global $DB;
+    
+        $sql = "
+            SELECT 
+                a.duedate AS assign_duedate,
+                asb.timecreated AS submission_date,
+                asb.attemptnumber AS attempt,
+                cm.instance AS assign_id              
+            FROM 
+                {course_modules} cm
+            JOIN 
+                {assign} a ON a.id = cm.instance
+            LEFT JOIN 
+                {assign_submission} asb ON asb.userid =? AND asb.assignment = a.id
+            WHERE 
+                cm.id =?
+            ORDER BY 
+            	asb.id DESC
+            LIMIT 1"; 
+    
+        $params = [$studentid, $coursemoduleid];
+        $result = $DB->get_record_sql($sql, $params);
+    
+        // Initialize default values
+        $isLate = true;
+        $attempt = null; 
+        
+        if ($result &&!empty($result)) {
+            // Convert UNIX timestamps to DateTime objects for easier comparison
+            $dueDate = new \DateTime("@{$result->assign_duedate}");
+            $submitDate = new \DateTime("@{$result->submission_date}");
+           
+            $isLate = $submitDate > $dueDate;
+                
+            $attempt = $result->attempt;           
+        }    
+        
+        return [
+            'isLate' => $isLate,
+            'currentAttempt' => $attempt,			
+            'assignId' => $result->assign_id
+        ];
+    }
+
+	/**
+	 * Atualiza as competências de um estudante e curso específicos e
+	 * retorna o código HTML de uma tag div contendo a mensagem de retorno.
+	 *
+	 * @param int $courseid O id do curso que terá as competências
+	 * avaliadas.
+ 	 * @param int $studentid O id de estudante que terá as competências
+	 * avaliadas.
+	 * @return string Código HTML de uma div contendo a mensagem de retorno,
+	 * indicando sucesso ou erro e incluindo link para página relevante.
+	 *
+	*/
+	public static function gradeassigncompetencies_printableresult($courseid, $studentid) {
 		$result = self::gradeassigncompetencies($courseid, $studentid);
 
 		$result_content = \html_writer::tag('p', get_string($result['msg'], 'local_autocompgrade'));
@@ -282,15 +380,15 @@ class autocompgrade {
 	}
 
 	/**
-		 * Atualiza as competências de um estudante e curso específicos,
-		 * a partir de um evento de tarefa avaliada ou questionário respondido.
-		 *
-		 * @param \core\event\base $event O evento que foi disparado. A execução
-		 * é realizada apenas se for um dos seguintes tipos de evento:
-		 * - \mod_assign\event\submission_graded
-		 * - \mod_quiz\event\attempt_submitted
-		 */
-		public static function gradeassigncompetencies_event(\core\event\base  $event) {
+	 * Atualiza as competências de um estudante e curso específicos,
+	 * a partir de um evento de tarefa avaliada ou questionário respondido.
+	 *
+	 * @param \core\event\base $event O evento que foi disparado. A execução
+	 * é realizada apenas se for um dos seguintes tipos de evento:
+	 * - \mod_assign\event\submission_graded
+	 * - \mod_quiz\event\attempt_submitted
+	 */
+	public static function gradeassigncompetencies_event(\core\event\base  $event) {
 		if (in_array($event->eventname, array('\mod_assign\event\submission_graded', '\mod_quiz\event\attempt_submitted'))) {
 			self::gradeassigncompetencies(
 				$event->courseid,
