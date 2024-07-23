@@ -17,6 +17,7 @@ houver.
 3. Acessar a página principal de administração do Moodle.
 4. Conferir o plugin na lista exibida e confirmar a atualização do banco de
 dados do Moodle.
+5. Renomear o arquivo credentials_dist.php para credentials.php e atualizar o token do webservice.
 
 ## Usabilidade
 
@@ -24,6 +25,16 @@ Após a instalação do plugin, sempre que uma entrega de tarefa for avaliada ou
 questionário for respondido e a atividade estiver associada a competências, o
 conceito de cada estudante nas competências correspondentes dentro do curso será
 atualizado automaticamente.
+
+Ao salvar a avaliação da entrega o plugin verifica os seguintes critérios e faz o downgrade da nota para D quando necessário:
+
+    - Primeira entrega do AT atrasada - limita a nota para D.
+    - Entrega do AT no prazo certo - não limita a nota.
+    - Entrega do AT na data correta mas tem TP atrasado, limita a nota para D.
+    - Entrega do AT em atraso, ficou com ND em alguma competência, não reabre a segunda tentativa.
+    - Entrega do AT no prazo correto, reprovado em alguma competência, reabre a segunda tentativa automático.
+    - Entrega da segunda tentativa do AT, limitar a rubrica em D.
+    - Entrega da segunda tentativa do AT, ficou com ND em alguma competência, manter o ND.
 
 Para forçar a atualização de competências para um estudante e curso específicos,
 acessar o menu lateral `Administração do Site > Competências > Avaliação
