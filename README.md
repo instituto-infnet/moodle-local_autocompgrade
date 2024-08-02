@@ -28,13 +28,15 @@ atualizado automaticamente.
 
 Ao salvar a avaliação da entrega o plugin verifica os seguintes critérios e faz o downgrade da nota para D quando necessário:
 
-    - Primeira entrega do AT atrasada - limita a nota para D.
-    - Entrega do AT no prazo certo - não limita a nota.
-    - Entrega do AT na data correta mas tem TP atrasado, limita a nota para D.
-    - Entrega do AT em atraso, ficou com ND em alguma competência, não reabre a segunda tentativa.
-    - Entrega do AT no prazo correto, reprovado em alguma competência, reabre a segunda tentativa automático.
-    - Entrega da segunda tentativa do AT, limitar a rubrica em D.
-    - Entrega da segunda tentativa do AT, ficou com ND em alguma competência, manter o ND.
+    1 - Entrega dos TPs e do AT no prazo certo - não limita a nota, o aluno pode ficar com ND, D, DL ou DML.
+    2 - TPs entregues(com atraso ou não) e primeira entrega do AT atrasada  - limita a nota para D.
+    3 - Possui alguma entrega de TP atrasada e AT entregue na data correta - limitar nota para D.
+    4 - Entrega primeira tentativa do AT no prazo correto e TPs entregues, reprovado em alguma competência(ND), reabre a segunda tentativa de forma automática.
+    5 - TPs entregues(com atraso ou não) e entrega do AT em atraso, ficou com ND em alguma competência - não reabre a segunda tentativa.
+    6 - Entrega da segunda tentativa do AT - limitar a nota para D.
+    7 - Entrega da segunda tentativa do AT, ficou com ND em alguma competência - mantém o ND.
+    8 - Aluno possui alguma prorrogação de data em algum TP e fez a entrega dentro desse prazo - não limita a nota, o aluno pode ficar com ND, D, DL ou DML.
+    9 - Aluno possui prorrogação de data no AT e fez a entrega dentro desse prazo  - não limita a nota, o aluno pode ficar com ND, D, DL ou DML.
 
 Para forçar a atualização de competências para um estudante e curso específicos,
 acessar o menu lateral `Administração do Site > Competências > Avaliação

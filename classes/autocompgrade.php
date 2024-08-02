@@ -157,7 +157,7 @@ class autocompgrade {
 				'userid' => $studentid
 			);
 
-			$mh = curl_multi_init();
+			$mh = curl_multi_init();			
 					
 			// Retrieve the first `userid` from `Currentgrades` without using foreach
 			$firstCurrentGrade = reset($currentgrades);
@@ -167,13 +167,17 @@ class autocompgrade {
 			$firstActivityId = !empty($activities['assign']) ? $activities['assign'][0] : null;
 			
 			$submissionDetails = self::getSubmissionDetails($firstActivityId, $firstUserId);
-						
+			
 			$isLate = $submissionDetails['isLate'] ? "late":"notLate";
 
 			$hasLateTP = self::checkStudentTPSubmission($firstUserId, $firstCurrentGrade->courseid);
 
-			$secondAttempt = false;
+			$secondAttempt = false;	
+			
+			//$filepath = $CFG->dataroot. '/debug3.log'; // fica na raiz do moodledata
+
 			foreach ($competenciesresults as $competencyid => $competencyresult) {
+
 				$params['competencyid'] = $competencyid;
 				$params['grade'] = $competencyresult->get_grade($isLate,$submissionDetails['currentAttempt'],$hasLateTP);
 				$params['note'] = $competencyresult->get_grade_note($isLate,$submissionDetails['currentAttempt'],$hasLateTP);
@@ -181,39 +185,61 @@ class autocompgrade {
 				if ((intval($params['grade']) < 2)AND($isLate == 'notLate')AND($submissionDetails['currentAttempt'] == '0')) {
 					$secondAttempt = true;
 				}
-
-				$ch[$row] = curl_init(
-					$CFG->wwwroot .
-					'/webservice/rest/server.php'
-				);
+				
+				$curl_url = $CFG->wwwroot . '/webservice/rest/server.php';
+				$ch[$row] = curl_init($curl_url);
 
 				// CURLOPT_RETURNTRANSFER para não retornar o resultado, que não é tratado pela tela de avaliação de tarefa
 				curl_setopt($ch[$row], CURLOPT_RETURNTRANSFER, true);
 				curl_setopt($ch[$row], CURLOPT_POST, true);
 				curl_setopt($ch[$row], CURLOPT_POSTFIELDS, $params);
 
+				// Disable SSL
+				//curl_setopt($ch[$row], CURLOPT_SSL_VERIFYPEER, false);
+				//curl_setopt($ch[$row], CURLOPT_SSL_VERIFYHOST, 0);
+
 				curl_multi_add_handle($mh, $ch[$row]);
 			}
-
+			$output1 = "";
 			do {
-				curl_multi_exec($mh, $running);
+				$status = curl_multi_exec($mh, $running);
+				if ($status > 0) {
+					$output1 .= print_r("cURL multi error: " . curl_multi_strerror($status), true);
+				}
 				curl_multi_select($mh);
 			} while ($running > 0);
-
+			
 			foreach(array_keys($ch) as $key) {
 				$curl_error = curl_error($ch[$key]);
+				$http_code = curl_getinfo($ch[$key], CURLINFO_HTTP_CODE);
+				
+				$output4 = self::check_ssl_error($ch[$key]);
 
 				if (!$noreturn) {
 					if($curl_error == "") {
-						$return['results_ch'][] = curl_multi_getcontent($ch[$key]);
+						$content = curl_multi_getcontent($ch[$key]);
+            			$return['results_ch'][] = $content;
+						
+						$output2 = print_r("cURL request completed. HTTP code: $http_code, Content: $content", true);
 					} else {
 						$return['errors_ch'][] = $curl_error;
+						
+						$output3 = print_r("cURL error: $curl_error", true);
 					}
 
 				}
 
 				curl_multi_remove_handle($mh, $ch[$key]);
 			}
+
+			// $logEntry = $output . "###################"
+			// 			. "\nCurl url:". $curl_url
+			// 			. "\noutput1:". $output1 
+			// 			. "\noutput2:". $output2 
+			// 			. "\nOutput3:". $output3
+			// 			. "\nOutput4:". $output4 . PHP_EOL;
+
+			// file_put_contents($filepath, $logEntry, FILE_APPEND);
 
 			curl_multi_close($mh);
 			
@@ -238,46 +264,56 @@ class autocompgrade {
 		}
 	}
 
+	function check_ssl_error($ch) {
+		$curl_info = curl_getinfo($ch);
+		if ($curl_info['ssl_verify_result'] !== 0) {
+			return "SSL certificate problem: " . curl_strerror($curl_info['ssl_verify_result']);
+		}
+		return false;
+	}
+
 	function checkStudentTPSubmission($studentid, $courseid) {
-        global $DB;
-    
-        $sql = "SELECT 
-                a.id AS assign_id,
-                a.name AS assign_name,
-                a.duedate AS assign_duedate,
-                asb.timecreated AS submission_date,
-                CASE
-                    WHEN asb.status = 'submitted' THEN 'Yes'
-                    ELSE 'No'
-                END AS submitted
-            FROM 
-                {assign} a
-            LEFT JOIN 
-                {assign_submission} asb ON asb.assignment = a.id AND asb.userid = ?
-            WHERE 
-                a.name LIKE 'Teste de performance%' AND
-                a.course = ? 
-                
-            ORDER BY 
-                a.name;";
-    
-        $params = [
-            'userid' => $studentid,
-            'courseid' => $courseid
-        ];
-    
-        $results = $DB->get_records_sql($sql, $params);
-        
-        $hasLateTP = false;
-        foreach ($results as $result) {
-            if ($result->submitted == "Yes") {                
-                $hasLateTP = $result->submission_date > $result->assign_duedate? true : false;
-                if($hasLateTP)
+		global $DB;
+	
+		$sql = "SELECT 
+				a.id AS assign_id,
+				a.name AS assign_name,
+				CASE
+					WHEN auf.extensionduedate > 0 THEN auf.extensionduedate
+					ELSE a.duedate
+				END AS effective_duedate,
+				asb.timecreated AS submission_date,
+				CASE
+					WHEN asb.status = 'submitted' THEN 'Yes'
+					ELSE 'No'
+				END AS submitted
+			FROM 
+				{assign} a
+			LEFT JOIN 
+				{assign_submission} asb ON asb.assignment = a.id AND asb.userid = ?
+			LEFT JOIN
+				{assign_user_flags} auf ON auf.assignment = a.id AND auf.userid = ?
+			WHERE 
+				a.name LIKE 'Teste de performance%' AND
+				a.course = ? 
+			ORDER BY 
+				a.name";
+
+		$params = [$studentid, $studentid, $courseid];
+
+		$results = $DB->get_records_sql($sql, $params);
+
+		$hasLateTP = false;
+		foreach ($results as $result) {
+			if ($result->submitted == "Yes") {                
+				$hasLateTP = $result->submission_date > $result->effective_duedate ? true : false;
+				if($hasLateTP) {
 					return $hasLateTP;
-            }            
-        }
-        return $hasLateTP;
-    }
+				}
+			}            
+		}
+		return $hasLateTP;
+	}
 
 	/**
      * Update the grade and allow the second attempt for a student.
@@ -315,45 +351,54 @@ class autocompgrade {
 	private static function getSubmissionDetails($coursemoduleid, $studentid) {
         global $DB;
     
-        $sql = "
-            SELECT 
-                a.duedate AS assign_duedate,
-                asb.timecreated AS submission_date,
-                asb.attemptnumber AS attempt,
-                cm.instance AS assign_id              
-            FROM 
-                {course_modules} cm
-            JOIN 
-                {assign} a ON a.id = cm.instance
-            LEFT JOIN 
-                {assign_submission} asb ON asb.userid =? AND asb.assignment = a.id
-            WHERE 
-                cm.id =?
-            ORDER BY 
-            	asb.id DESC
-            LIMIT 1"; 
-    
-        $params = [$studentid, $coursemoduleid];
-        $result = $DB->get_record_sql($sql, $params);
+         $sql = "
+			SELECT 
+				CASE
+					WHEN auf.extensionduedate > 0 THEN auf.extensionduedate
+					ELSE a.duedate
+				END AS effective_duedate,				
+				asb.timecreated AS submission_date,
+				asb.attemptnumber AS attempt,
+				cm.instance AS assign_id              
+			FROM 
+				{course_modules} cm
+			JOIN 
+				{assign} a ON a.id = cm.instance
+			LEFT JOIN 
+				{assign_submission} asb ON asb.userid = ? AND asb.assignment = a.id
+			LEFT JOIN
+				{assign_user_flags} auf ON auf.assignment = a.id AND auf.userid = ?
+			WHERE 
+				cm.id = ?
+			ORDER BY 
+				asb.id DESC
+			LIMIT 1"; 
+			
+		$params = [$studentid, $studentid, $coursemoduleid];
+		$result = $DB->get_record_sql($sql, $params);
     
         // Initialize default values
         $isLate = true;
         $attempt = null; 
-        
-        if ($result &&!empty($result)) {
-            // Convert UNIX timestamps to DateTime objects for easier comparison
-            $dueDate = new \DateTime("@{$result->assign_duedate}");
-            $submitDate = new \DateTime("@{$result->submission_date}");
-           
-            $isLate = $submitDate > $dueDate;
-                
-            $attempt = $result->attempt;           
-        }    
+		$assignId = null;
+    
+		if ($result && !empty($result)) {
+			// Convert UNIX timestamps to DateTime objects for easier comparison
+			$effectiveDueDate = new \DateTime("@{$result->effective_duedate}");
+			
+			if ($result->submission_date) {
+				$submitDate = new \DateTime("@{$result->submission_date}");
+				$isLate = $submitDate > $effectiveDueDate;
+			}
+				
+			$attempt = $result->attempt;
+			$assignId = $result->assign_id;
+		}    
         
         return [
             'isLate' => $isLate,
             'currentAttempt' => $attempt,			
-            'assignId' => $result->assign_id
+            'assignId' => $assignId
         ];
     }
 
