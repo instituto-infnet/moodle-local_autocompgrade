@@ -283,6 +283,7 @@ class autocompgrade {
 					ELSE a.duedate
 				END AS effective_duedate,
 				asb.timecreated AS submission_date,
+				asb.timemodified AS submission_date_modified,
 				CASE
 					WHEN asb.status = 'submitted' THEN 'Yes'
 					ELSE 'No'
@@ -306,7 +307,7 @@ class autocompgrade {
 		$hasLateTP = false;
 		foreach ($results as $result) {
 			if ($result->submitted == "Yes") {                
-				$hasLateTP = $result->submission_date > $result->effective_duedate ? true : false;
+				$hasLateTP = $result->submission_date_modified > $result->effective_duedate ? true : false;
 				if($hasLateTP) {
 					return $hasLateTP;
 				}
@@ -358,6 +359,7 @@ class autocompgrade {
 					ELSE a.duedate
 				END AS effective_duedate,				
 				asb.timecreated AS submission_date,
+				asb.timemodified AS submission_date_modified_utc,
 				asb.attemptnumber AS attempt,
 				cm.instance AS assign_id              
 			FROM 
@@ -387,8 +389,8 @@ class autocompgrade {
 			$effectiveDueDate = new \DateTime("@{$result->effective_duedate}");
 			
 			if ($result->submission_date) {
-				$submitDate = new \DateTime("@{$result->submission_date}");
-				$isLate = $submitDate > $effectiveDueDate;
+				$submitDateModified = new \DateTime("@{$result->submission_date_modified_utc}");				
+				$isLate = $submitDateModified > $effectiveDueDate;
 			}
 				
 			$attempt = $result->attempt;
