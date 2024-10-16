@@ -195,8 +195,8 @@ class autocompgrade {
 				curl_setopt($ch[$row], CURLOPT_POSTFIELDS, $params);
 
 				// Disable SSL
-				//curl_setopt($ch[$row], CURLOPT_SSL_VERIFYPEER, false);
-				//curl_setopt($ch[$row], CURLOPT_SSL_VERIFYHOST, 0);
+				curl_setopt($ch[$row], CURLOPT_SSL_VERIFYPEER, false);
+				curl_setopt($ch[$row], CURLOPT_SSL_VERIFYHOST, 0);
 
 				curl_multi_add_handle($mh, $ch[$row]);
 			}
@@ -305,13 +305,29 @@ class autocompgrade {
 		$results = $DB->get_records_sql($sql, $params);
 
 		$hasLateTP = false;
+		// foreach ($results as $result) {
+		// 	if ($result->submitted == "Yes") {                
+		// 		$hasLateTP = $result->submission_date_modified > $result->effective_duedate ? true : false;
+		// 		if($hasLateTP) {
+		// 			return $hasLateTP;
+		// 		}
+		// 	}            
+		// }
+
 		foreach ($results as $result) {
-			if ($result->submitted == "Yes") {                
-				$hasLateTP = $result->submission_date_modified > $result->effective_duedate ? true : false;
-				if($hasLateTP) {
+			if ($result->submitted == "Yes") {				
+				$effectiveDueDate = new \DateTime("@{$result->effective_duedate}");
+				$effectiveDueDate->modify('+3 hours');
+				
+				// Convert submission_date_modified to DateTime
+				$submissionDateModified = new \DateTime("@{$result->submission_date_modified}");
+				
+				// Check if the submission was late
+				$hasLateTP = $submissionDateModified > $effectiveDueDate ? true : false;
+				if ($hasLateTP) {
 					return $hasLateTP;
 				}
-			}            
+			}
 		}
 		return $hasLateTP;
 	}
@@ -387,6 +403,7 @@ class autocompgrade {
 		if ($result && !empty($result)) {
 			// Convert UNIX timestamps to DateTime objects for easier comparison
 			$effectiveDueDate = new \DateTime("@{$result->effective_duedate}");
+			$effectiveDueDate->modify('+3 hours');
 			
 			if ($result->submission_date) {
 				$submitDateModified = new \DateTime("@{$result->submission_date_modified_utc}");				
