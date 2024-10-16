@@ -195,8 +195,8 @@ class autocompgrade {
 				curl_setopt($ch[$row], CURLOPT_POSTFIELDS, $params);
 
 				// Disable SSL
-				curl_setopt($ch[$row], CURLOPT_SSL_VERIFYPEER, false);
-				curl_setopt($ch[$row], CURLOPT_SSL_VERIFYHOST, 0);
+				// curl_setopt($ch[$row], CURLOPT_SSL_VERIFYPEER, false);
+				// curl_setopt($ch[$row], CURLOPT_SSL_VERIFYHOST, 0);
 
 				curl_multi_add_handle($mh, $ch[$row]);
 			}
@@ -404,7 +404,7 @@ class autocompgrade {
 			// Convert UNIX timestamps to DateTime objects for easier comparison
 			$effectiveDueDate = new \DateTime("@{$result->effective_duedate}");
 			$effectiveDueDate->modify('+3 hours');
-			
+
 			if ($result->submission_date) {
 				$submitDateModified = new \DateTime("@{$result->submission_date_modified_utc}");				
 				$isLate = $submitDateModified > $effectiveDueDate;
