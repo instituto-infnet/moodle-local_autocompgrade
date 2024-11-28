@@ -59,6 +59,8 @@ class competency_result {
          */
 	public $graders;
 
+        public $grade = 0;
+
 	/**
          * Retorna uma instância desta classe, com a propriedade competencyid
          * igual ao valor informado.
@@ -95,6 +97,29 @@ class competency_result {
 		return $grade;
 	}
 
+         /**
+         * Nova forma de Calculo, cada competência já tem os conceitos ND, D , DL, DML
+         * 
+         * @return int Grau do conceito calculado, conforme a escala Infnet:
+         * 1 = Não demonstrou (< 1) /
+         * 2 = Demonstrou (>= 1, < 2) /
+         * 3 = Demonstrou com louvor (== 2, < 3) /
+         * 4 = Demonstrou com máximo louvor (==3)
+         */
+        public function get_grade_new($isLate,$attempt,$hasLateTP) {		
+                $grade = 1;
+
+                if (($this->grade === 3)AND($isLate == 'notLate')AND($attempt == '0')AND(!$hasLateTP)) {
+                        $grade = 4;
+                } else if (($this->grade === 2)AND($isLate == 'notLate')AND($attempt == '0')AND(!$hasLateTP)) {
+                        $grade = 3;
+                } else if ($this->grade >= 1) {
+                        $grade = 2;
+                }
+
+                return $grade;
+	}
+
 	/**
          * Organiza o texto do comentário incluído na evidência da alteração
          * de conceito da competência, indicando se houve questões objetivas
@@ -123,6 +148,7 @@ class competency_result {
 			);
 		}
                 $msgLate = $isLate == 'late'? ' Nota rebaixada devido a entrega em atraso.':'';
+                $msgLate .= $this->grade >= 1 ? ' Nota definida usando o critério de avaliação B (Prof. diretamente define o grau da competência).':'';
                 $msgLate .= $attempt == '1'? ' Nota rebaixada devido ser a entrega da segunda tentativa.':'';
                 $msgLate .= ($hasLateTP == true)? ' Nota rebaixada devido a ter entregue um dos TPs em atraso.':'';
 		return get_string('gradenote', 'local_autocompgrade', $notesuffix . '.') . $msgLate;

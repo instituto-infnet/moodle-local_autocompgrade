@@ -60,7 +60,10 @@ class autocompgrade {
 	 */
 	public static function gradeassigncompetencies($courseid, $studentid, $noreturn = false) {
 		global $CFG;
-		global $DB;
+		global $DB;	
+		
+		$course = $DB->get_record('course', array('id' => $courseid), 'id, fullname');
+		self::log_message($courseid, $course->fullname, "\n Gradeassigncompetencies called with studentid= {$studentid}, courseid= {$courseid}");
 
 		if (!$noreturn) {
 			$return = array(
@@ -78,6 +81,9 @@ class autocompgrade {
 			$courseid, $studentid
 		));
 		$studentActivities = $result;
+
+		self::log_message($courseid, $course->fullname, "Retrieved student activities: " . json_encode($studentActivities));
+
 		if (!$noreturn) {
 			// print_object($result);
 		}
@@ -85,6 +91,8 @@ class autocompgrade {
 		$activities = array();
 		foreach ($result as $cmid => $values) {
 			if ($values->graded === '0') {
+				$message = "Error: Pending activities for module {$values->module}, cmid {$cmid}";
+    			self::log_message($courseid, $course->fullname, $message);
 				if (!$noreturn) {
 					$return['msg'] = 'error_pendingactivities';
 					$return['params']['module'] = $values->module;
@@ -137,11 +145,17 @@ class autocompgrade {
 			}
 		}
 
+		$message = "CompetencyResults: " . json_encode($competenciesresults);
+    	self::log_message($courseid, $course->fullname, $message);
+
 		if (!$noreturn) {
 			// print_object($competenciesresults);
 		}
 
-		$currentgrades = $DB->get_records('competency_usercompcourse', array('courseid' => $courseid, 'userid' => $studentid));
+		$currentgrades = $DB->get_records('competency_usercompcourse', array('courseid' => $courseid, 'userid' => $studentid));		
+
+		$message = "Currentgrades: " . json_encode($currentgrades);
+    	self::log_message($courseid, $course->fullname, $message);
 
 		foreach ($currentgrades as $usercompcourseid => $values) {
 			if (isset($values->grade) && isset($competenciesresults[$values->competencyid]) && $values->grade == $competenciesresults[$values->competencyid]->get_grade('notLate','0',false)) {
@@ -165,26 +179,59 @@ class autocompgrade {
 
 			// Retrieve the first value in `Activities` || $activities is the id of the table course_module
 			$firstActivityId = !empty($activities['assign']) ? $activities['assign'][0] : null;
+
+			$message = "firstCurrentGrade: " . json_encode($firstCurrentGrade) . ", firstUserId: {$firstUserId}, firstActivityId: {$firstActivityId}";
+    		self::log_message($courseid, $course->fullname, $message);
 			
 			$submissionDetails = self::getSubmissionDetails($firstActivityId, $firstUserId);
 			
+			$message = "submissionDetails: " . json_encode($submissionDetails);
+    		self::log_message($courseid, $course->fullname, $message);
+		
+			$assignTag = self::getAssignTag($firstActivityId);
+
+			$message = "assignTag: " . json_encode($assignTag);
+    		self::log_message($courseid, $course->fullname, $message);
+						
 			$isLate = $submissionDetails['isLate'] ? "late":"notLate";
 
-			$hasLateTP = self::checkStudentTPSubmission($firstUserId, $firstCurrentGrade->courseid);
+			$hasLateTP = self::checkStudentTPSubmission($firstUserId, $firstCurrentGrade->courseid, $course->fullname);
+			
+			if($assignTag->tag_name === 'critériob'){									
+				$studentPoints = self::getStudentPoints($courseid, $submissionDetails['assignId'], $firstUserId);
+				if(count($studentPoints) !== 0){
+					foreach ($competenciesresults as $competencyresult) {
+						$competencyresult->grade = intval($studentPoints[$competencyresult->competencyid]->pointsawarded);
+					}
+				}
+
+				$message = "studentPoints: " . json_encode($studentPoints);
+				$message = "CompetencyResults(modified): " . json_encode($competenciesresults);    	
+    			self::log_message($courseid, $course->fullname, $message);
+			}
 
 			$secondAttempt = false;	
-			
-			//$filepath = $CFG->dataroot. '/debug3.log'; // fica na raiz do moodledata
 
 			foreach ($competenciesresults as $competencyid => $competencyresult) {
 
 				$params['competencyid'] = $competencyid;
-				$params['grade'] = $competencyresult->get_grade($isLate,$submissionDetails['currentAttempt'],$hasLateTP);
-				$params['note'] = $competencyresult->get_grade_note($isLate,$submissionDetails['currentAttempt'],$hasLateTP);
+
+				if($assignTag->tag_name === 'critériob'){										
+					$params['grade'] = $competencyresult->get_grade_new($isLate,$submissionDetails['currentAttempt'],$hasLateTP);
+					$params['note'] = $competencyresult->get_grade_note($isLate,$submissionDetails['currentAttempt'],$hasLateTP);
+				}else{
+					$params['grade'] = $competencyresult->get_grade($isLate,$submissionDetails['currentAttempt'],$hasLateTP);
+					$params['note'] = $competencyresult->get_grade_note($isLate,$submissionDetails['currentAttempt'],$hasLateTP);
+				}					
 
 				if ((intval($params['grade']) < 2)AND($isLate == 'notLate')AND($submissionDetails['currentAttempt'] == '0')) {
 					$secondAttempt = true;
 				}
+
+				$message = "Params['grade']: " . $params['grade'];
+				$message .= " - Params['note']: " . $params['note'];
+				$message .= " - secondAttempt: " . $secondAttempt ? 'true':'false';
+    			self::log_message($courseid, $course->fullname, $message);
 				
 				$curl_url = $CFG->wwwroot . '/webservice/rest/server.php';
 				$ch[$row] = curl_init($curl_url);
@@ -200,6 +247,7 @@ class autocompgrade {
 
 				curl_multi_add_handle($mh, $ch[$row]);
 			}
+			
 			$output1 = "";
 			do {
 				$status = curl_multi_exec($mh, $running);
@@ -213,7 +261,7 @@ class autocompgrade {
 				$curl_error = curl_error($ch[$key]);
 				$http_code = curl_getinfo($ch[$key], CURLINFO_HTTP_CODE);
 				
-				$output4 = self::check_ssl_error($ch[$key]);
+				// $output4 = self::check_ssl_error($ch[$key]);
 
 				if (!$noreturn) {
 					if($curl_error == "") {
@@ -272,7 +320,7 @@ class autocompgrade {
 		return false;
 	}
 
-	function checkStudentTPSubmission($studentid, $courseid) {
+	function checkStudentTPSubmission($studentid, $courseid, $courseFullname) {
 		global $DB;
 	
 		$sql = "SELECT 
@@ -304,15 +352,7 @@ class autocompgrade {
 
 		$results = $DB->get_records_sql($sql, $params);
 
-		$hasLateTP = false;
-		// foreach ($results as $result) {
-		// 	if ($result->submitted == "Yes") {                
-		// 		$hasLateTP = $result->submission_date_modified > $result->effective_duedate ? true : false;
-		// 		if($hasLateTP) {
-		// 			return $hasLateTP;
-		// 		}
-		// 	}            
-		// }
+		$hasLateTP = false;		
 
 		foreach ($results as $result) {
 			if ($result->submitted == "Yes") {				
@@ -325,12 +365,114 @@ class autocompgrade {
 				// Check if the submission was late
 				$hasLateTP = $submissionDateModified > $effectiveDueDate ? true : false;
 				if ($hasLateTP) {
+					$message = "Function checkStudentTPSubmission \n";
+					$message .= "Results: " . json_encode($results);
+					$message .= "\nResult->effective_duedate: {$result->effective_duedate}, effectiveDueDate: " 
+									. json_encode($effectiveDueDate) . ", submissionDateModified: " . json_encode($submissionDateModified)
+									. ", hasLateTP: " . json_encode($hasLateTP);
+					self::log_message($courseid, $courseFullname, $message);
 					return $hasLateTP;
 				}
 			}
 		}
+
+		$message = "Function checkStudentTPSubmission \n";
+		$message .= "Results: " . json_encode($results);
+		$message .= "Result->effective_duedate: {$result->effective_duedate}, effectiveDueDate: " 
+						. json_encode($effectiveDueDate) . ", submissionDateModified: " . json_encode($submissionDateModified)
+						. ", hasLateTP: " . json_encode($hasLateTP);
+    	self::log_message($courseid, $courseFullname, $message);
+
 		return $hasLateTP;
 	}
+
+	function getAssignTag($coursemoduleid) {
+        global $DB;
+    
+        $sql = "SELECT 
+					t.id AS tag_id,
+					t.name AS tag_name
+				FROM 
+					{tag_instance} ti
+				JOIN 
+					{tag} t ON t.id = ti.tagid
+				WHERE 
+					ti.itemid = :moduleid
+					AND ti.itemtype = 'course_modules'
+				LIMIT 1;";
+    
+        $params = [
+            'moduleid' => $coursemoduleid
+        ];
+    
+        return $DB->get_record_sql($sql, $params);
+    }
+
+	function getStudentPoints($courseid, $assigmentid, $userid) {
+        global $DB;
+		
+        $sql = "SELECT
+					comp.id AS competencyid,
+					comp.shortname AS competencyname,
+					u.id AS userid,
+					CONCAT(u.firstname, ' ', u.lastname) AS studentname,
+					a.id AS assignmentid,
+					a.name AS assignmentname,
+					grc.id AS criterionid,
+					grc.description AS criteriondescription,
+					grl.score AS pointsawarded    
+				FROM
+					mdl_assign a
+				JOIN
+					mdl_course_modules cm ON cm.instance = a.id
+				JOIN
+					mdl_modules m ON m.id = cm.module
+						AND m.name = 'assign'
+				JOIN
+					mdl_context ctx ON ctx.instanceid = cm.id
+				JOIN
+					mdl_grading_areas ga ON ga.contextid = ctx.id
+				JOIN
+					mdl_grading_definitions gd ON gd.areaid = ga.id
+				JOIN
+					mdl_grading_instances gi ON gi.definitionid = gd.id
+						AND gi.status = 1
+				JOIN
+					mdl_gradingform_rubric_criteria grc ON grc.definitionid = gd.id
+				JOIN
+					mdl_gradingform_rubric_fillings grf ON grf.instanceid = gi.id
+						AND grf.criterionid = grc.id
+				JOIN
+					mdl_gradingform_rubric_levels grl ON grl.id = grf.levelid
+				JOIN
+					mdl_assign_grades ag ON ag.id = gi.itemid
+				JOIN
+					mdl_user u ON u.id = ag.userid
+				JOIN
+					mdl_competency_modulecomp comp_cm ON comp_cm.cmid = cm.id
+				JOIN
+					mdl_competency comp ON comp.id = comp_cm.competencyid
+						AND comp.idnumber = LEFT(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(grc.description, '[c]', ''), '\n', ''), '\r', ''), '\t', ''), ' ', ''),
+							LOCATE('.', REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(grc.description, '[c]', ''), '\n', ''), '\r', ''), '\t', ''), ' ', '')) - 1)
+				WHERE
+					cm.course = ?
+					AND a.id = ?
+					AND u.id = ?
+					AND cm.visible = 1
+				ORDER BY
+					comp.idnumber,
+					grc.id;";
+    
+        $params = [
+            'courseid' => $courseid,
+            'assigmentid' => $assigmentid,
+            'userid' => $userid
+        ];
+    
+        $results = $DB->get_records_sql($sql, $params);        
+        
+        return $results;
+    }
 
 	/**
      * Update the grade and allow the second attempt for a student.
@@ -417,10 +559,46 @@ class autocompgrade {
         return [
             'isLate' => $isLate,
             'currentAttempt' => $attempt,			
-            'assignId' => $assignId
+            'assignId' => $assignId,
+            'effective_duedate' => $result->effective_duedate,
+            'effective_duedate_modified' => $effectiveDueDate,
+            'result->submission_date' => $result->submission_date,
+            'submitDateModified' => $submitDateModified
         ];
     }
 
+	private static function log_message($courseid, $courseFullname, $message) {
+		global $DB, $CFG;
+					
+		$coursename = self::sanitize_filename($courseFullname);
+					
+		$filename = $coursename . '_courseid_' . $courseid . '.log';
+	
+		// Define the path to save the log file
+		// The logs will be stored in Moodle's dataroot directory, under /local_autocompgrade/logs/
+		$logdir = $CFG->dataroot . '/local_autocompgrade/logs';
+		
+		if (!is_dir($logdir)) {
+			mkdir($logdir, 0777, true);
+		}
+		
+		$filepath = $logdir . '/' . $filename;
+		
+		$timestamp = date('d-m-Y H:i:s');
+		$log_entry = '[' . $timestamp . '] ' . $message . PHP_EOL;
+		
+		file_put_contents($filepath, $log_entry, FILE_APPEND);
+	}
+	
+	private static function sanitize_filename($filename) {
+	
+		$filename = preg_replace('/[^A-Za-z0-9_\-]/', '_', $filename);
+		
+		$filename = substr($filename, 0, 100);
+	
+		return $filename;
+	}
+	
 	/**
 	 * Atualiza as competências de um estudante e curso específicos e
 	 * retorna o código HTML de uma tag div contendo a mensagem de retorno.
@@ -514,7 +692,7 @@ class autocompgrade {
 	 * @return string O comando SQL correspondente ao nome informado.
 	 */
 	private static function get_query_string($queryname) {
-		$query;
+		$query= '';
 
 		if ($queryname === 'student_course_activities') {
 			// Quantidade de avaliações existentes e corrigidas no curso
